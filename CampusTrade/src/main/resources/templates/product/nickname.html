@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ニックネーム変更 - CampusTrade</title>
+    <style>
+        :root {
+            --primary: #2563eb; --primary-dark: #1d4ed8; --bg: #f8fafc;
+            --surface: #ffffff; --text: #0f172a; --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
+        .navbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; }
+        .container { max-width: 500px; margin: 4rem auto; padding: 0 1rem; }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-label { display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.95rem; }
+        .form-control { width: 100%; box-sizing: border-box; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; outline: none; }
+        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .btn { width: 100%; padding: 0.75rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-size: 1rem; transition: background 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .back-link { display: inline-block; margin-bottom: 1rem; color: var(--text-muted); text-decoration: none; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="/products" style="font-size: 1.5rem; font-weight: 800; color: var(--primary); text-decoration: none;">🏫 CampusTrade</a>
+    </nav>
+
+    <div class="container">
+        <a href="/products/mypage" class="back-link">← マイページに戻る</a>
+
+        <div class="card">
+            <h1 style="margin: 0 0 1.5rem 0; font-weight: 800; font-size: 1.4rem;">✏️ ニックネームの変更</h1>
+            
+            <form th:action="@{/products/nickname/update}" method="post">
+                <div class="form-group">
+                    <label class="form-label">現在の設定: <span style="color: var(--primary);" th:text="${user.nickname}">ニックネーム</span></label>
+                    <input type="text" name="nickname" class="form-control" th:value="${user.nickname}" placeholder="新しいニックネームを入力" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary">🔄 ニックネームを更新する</button>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>

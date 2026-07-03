@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マイページ - CampusTrade</title>
+    <style>
+        :root {
+            --primary: #2563eb; --bg: #f8fafc; --surface: #ffffff; --text: #0f172a;
+            --text-muted: #64748b; --border: #e2e8f0; --danger: #ef4444;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
+        .navbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; }
+        .container { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .section-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; border-left: 4px solid var(--primary); padding-left: 0.5rem; }
+        .item-list { list-style: none; padding: 0; margin: 0; }
+        .item-row { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
+        .item-row a { color: var(--primary); text-decoration: none; font-weight: 600; }
+        .price { color: var(--danger); font-weight: 700; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="/products" style="font-size: 1.5rem; font-weight: 800; color: var(--primary); text-decoration: none;">🏫 CampusTrade</a>
+    </nav>
+
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <a href="/products" style="color: var(--text-muted); text-decoration: none; font-weight: 600;">← 商品一覧に戻る</a>
+            <a href="/products/nickname" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.9rem;">✏️ ニックネームを変更する</a>
+        </div>
+        
+        <div class="card" style="background: linear-gradient(135deg, #eff6ff 0%, #dbedff 100%); border: none;">
+            <h1 style="margin: 0; font-size: 1.5rem;">👤 <span th:text="${user.nickname}">ユーザー名</span> のマイページ</h1>
+            <p style="margin: 0.25rem 0 0 0; color: var(--text-muted); font-size: 0.9rem;">学生番号 / ログインID: <span th:text="${user.userId}">ID</span></p>
+        </div>
+
+        <div class="card" id="fav-section">
+            <h2 class="section-title">⭐ お気に入り中のアイテム</h2>
+            <ul class="item-list">
+                <li th:each="product : ${user.favoriteProducts}" class="item-row">
+                    <a th:href="@{/products/{id}(id=${product.id})}" th:text="${product.productName}">商品名</a>
+                    <span class="price" th:text="${product.price} + '円'">0円</span>
+                </li>
+                <li th:if="${#lists.isEmpty(user.favoriteProducts)}" style="color: var(--text-muted); font-style: italic;">お気に入り登録された商品はありません。</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">🎒 自分の出品した商品</h2>
+            <ul class="item-list">
+                <li th:each="product : ${myProducts}" class="item-row">
+                    <a th:href="@{/products/{id}(id=${product.id})}" th:text="${product.productName}">商品名</a>
+                    <span style="font-weight: 600;" th:text="${product.status}">STATUS</span>
+                </li>
+                <li th:if="${#lists.isEmpty(myProducts)}" style="color: var(--text-muted); font-style: italic;">出品した商品はありません。</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">🤝 現在交渉（チャット）中のアイテム</h2>
+            <ul class="item-list">
+                <li th:each="product : ${myNegotiations}" class="item-row">
+                    <a th:href="@{/products/{id}(id=${product.id})}" th:text="${product.productName}">商品名</a>
+                    <span class="price" th:text="${product.price} + '円'">0円</span>
+                </li>
+                <li th:if="${#lists.isEmpty(myNegotiations)}" style="color: var(--text-muted); font-style: italic;">現在進行中の交渉はありません。</li>
+            </ul>
+        </div>
+    </div>
+
+</body>
+</html>
