@@ -10,40 +10,52 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-import com.example.demo.repository.UserRepository;
+import com.example.demo.dao.UserDao;
+import com.example.demo.model.User;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // データベースからユーザーを取得して認証する仕組みを定義
-    @Bean
-    public UserDetailsService userDetailsService(UserRepository userRepository) {
-        return username -> userRepository.findByUserId(username)
-                .map(user -> org.springframework.security.core.userdetails.User.withUsername(user.getUserId())
-                        .password(user.getPassword())
-                        .roles(user.getRole().replace("ROLE_", "")) // ROLE_USER -> USER に変換
-                        .build())
-                .orElseThrow(() -> new UsernameNotFoundException("ユーザーが見つかりません: " + username));
+    private final UserDao userDao;
+
+    public SecurityConfig(UserDao userDao) {
+        this.userDao = userDao;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/products", "/products/{id}", "/h2-console/**", "/css/**", "/js/**").permitAll()
-                .requestMatchers("/admin/**").hasRole("ADMIN")
+                // ⭕ /register を追加して、未ログインでもユーザー登録画面を開けるようにします
+                .requestMatchers("/login", "/register", "/css/**", "/js/**").permitAll()
                 .anyRequest().authenticated()
             )
-            .formLogin(login -> login
-                .defaultSuccessUrl("/products", true)
+            .formLogin(form -> form
+                .loginPage("/login")
+                .defaultSuccessUrl("/home", true)
                 .permitAll()
             )
-            .logout(logout -> logout.permitAll())
-            .csrf(csrf -> csrf.disable())
-            .headers(headers -> headers.frameOptions(frame -> frame.disable()));
-            
+            .logout(logout -> logout
+                .logoutSuccessUrl("/login?logout")
+                .permitAll()
+            );
+
         return http.build();
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return email -> {
+            User user = userDao.findByEmail(email)
+                    .orElseThrow(() -> new UsernameNotFoundException("ユーザーが見つかりません: " + email));
+
+            return org.springframework.security.core.userdetails.User
+                    .withUsername(user.getEmail())
+                    .password(user.getPassword())
+                    .roles(user.getRole())
+                    .build();
+        };
     }
 
     @Bean
