@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- ホスト: 127.0.0.1
--- 生成日時: 2026-07-08 04:10:39
+-- 生成日時: 2026-07-08 05:09:18
 -- サーバのバージョン： 10.4.32-MariaDB
 -- PHP のバージョン: 8.0.30
 
@@ -96,6 +96,19 @@ CREATE TABLE `products` (
   `buyer_id` bigint(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- テーブルのデータのダンプ `products`
+--
+
+INSERT INTO `products` (`id`, `product_name`, `description`, `price`, `category_id`, `status`, `seller_id`, `buyer_id`) VALUES
+(1, 'システム開発論 教科書', '昨年度の講義で使用した教科書です。書き込みはありません。', 1500, 101, 'OPEN', 2, NULL),
+(2, 'ミニ冷蔵庫（2023年製）', '引越しに伴い不要になったため譲ります。動作確認済み、綺麗です。', 5000, 202, 'OPEN', 2, NULL),
+(3, 'キャンパスチェア（折りたたみ式）', 'サークル活動や屋外イベントで使える折りたたみ椅子です。', 800, 301, 'OPEN', 2, NULL),
+(4, '理系大学生向け関数電卓', 'テスト用に購入し、数回しか使用していません。箱・説明書付き。', 2200, 4, 'OPEN', 2, NULL),
+(5, '通学用クロスバイク（鍵・ライト付き）', '卒業に伴い手放します。防犯登録の解除手続きをしてからお渡しします。', 12000, 5, 'OPEN', 2, NULL),
+(6, '【美品】MacBook Air 13インチ (M1)', 'レポート作成で使用。ケースをつけていたため目立つ傷はありません。', 65000, 4, 'OPEN', 2, NULL),
+(7, '大学指定 体育館シューズ (26.5cm)', 'サイズを間違えて購入したため、未使用のまま出品します。', 1800, 6, 'OPEN', 2, NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -115,7 +128,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `email`, `password`, `nickname`, `role`) VALUES
-(1, 'example@example.com', '$2a$10$uG0lIc6455I31OwBlNXcZezjdDcLV0F2YNrm.wOBlfSltssU05ZOW', NULL, 'USER');
+(1, 'example@example.com', '$2a$10$uG0lIc6455I31OwBlNXcZezjdDcLV0F2YNrm.wOBlfSltssU05ZOW', NULL, 'USER'),
+(2, 'test@test.com', '$2a$10$yjvCFxPt0nLGVbKsRroj3O6knz9.9J1Ky/6M62KaSukexi6FCfDmC', NULL, 'USER');
 
 -- --------------------------------------------------------
 
@@ -183,13 +197,13 @@ ALTER TABLE `messages`
 -- テーブルの AUTO_INCREMENT `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- テーブルの AUTO_INCREMENT `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- ダンプしたテーブルの制約
