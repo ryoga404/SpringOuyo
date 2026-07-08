@@ -14,12 +14,11 @@
         .navbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .logo { font-size: 1.5rem; font-weight: 800; color: var(--primary); text-decoration: none; }
         
-        /* 💡 修正：絶対に途中で消えないドロップダウン設計 */
         .dropdown { 
             position: relative; 
             display: inline-block; 
-            padding-bottom: 15px;  /* 🛠️ メニューへ移動する下方向のマウス軌道に隠しパディングを設置 */
-            margin-bottom: -15px; /* パディングで広がった分の相殺（ナビゲーションの高さ崩れ防止） */
+            padding-bottom: 15px;  
+            margin-bottom: -15px; 
         }
         .user-name-btn { font-weight: 600; color: var(--text); background: #eff6ff; padding: 0.5rem 1rem; border-radius: 20px; text-decoration: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem; transition: background 0.2s; }
         .user-name-btn:hover { background: #dbeafe; }
@@ -29,7 +28,7 @@
             display: none; 
             position: absolute; 
             right: 0; 
-            top: 40px; /* 🛠️ ボタンの直下に正確に重ねるよう固定値を設定（隙間を完全抹殺） */
+            top: 40px; 
             background: var(--surface); 
             min-width: 180px; 
             box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); 
@@ -40,46 +39,27 @@
         }
         .dropdown-menu a { color: var(--text); padding: 0.75rem 1rem; text-decoration: none; display: block; font-size: 0.9rem; font-weight: 500; transition: background 0.2s; }
         .dropdown-menu a:hover { background: #f1f5f9; color: var(--primary); }
-        .dropdown:hover .dropdown-menu { display: block; } /* ホバーで表示 */
+        .dropdown:hover .dropdown-menu { display: block; } 
         .logout-btn { width: 100%; text-align: left; background: none; border: none; padding: 0.75rem 1rem; font-size: 0.9rem; color: var(--danger); cursor: pointer; font-weight: 600; transition: background 0.2s; }
         .logout-btn:hover { background: #fee2e2; }
 
         .btn { padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; text-decoration: none; cursor: pointer; border: none; transition: all 0.2s; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover { background: var(--primary-dark); }
+        
         .container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+        
+        /* 💡 検索ボックスエリアのデザイン調整 */
         .search-section { background: var(--surface); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 2rem; }
-        .search-form { display: flex; gap: 0.75rem; }
+        .search-form { display: flex; flex-direction: column; gap: 0.75rem; }
+        .search-row { display: flex; gap: 0.75rem; }
         .input-text { flex: 1; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; outline: none; }
-		.category-row{
-		    display:flex;
-		    gap:15px;
-		    margin-top:15px;
-		}
-
-		.category-row select{
-		    flex:1;
-		    padding:0.75rem 1rem;
-		    border:1px solid var(--border);
-		    border-radius:8px;
-		    font-size:1rem;
-		    background:#fff;
-		    outline:none;
-		    cursor:pointer;
-		}
-
-		.category-row select:focus{
-		    border-color:var(--primary);
-		}
-
-		.search-section{
-		    display:flex;
-		    flex-direction:column;
-		    gap:15px;
-		}
+        .select-control { flex: 1; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; outline: none; background-color: #fff; }
+        
         .tag-container { display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; }
         .tag { background: #f1f5f9; color: var(--text-muted); padding: 0.3rem 0.75rem; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; }
         .tag:hover { background: var(--primary); color: white; }
+        
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
         .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow: 0.2s; text-decoration: none; color: inherit; display: flex; flex-direction: column; }
         .card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
@@ -92,127 +72,6 @@
         .OPEN { background: #e0f2fe; color: #0369a1; }
         .LOCKED { background: #fef3c7; color: #b45309; }
         .CLOSED { background: #f1f5f9; color: #475569; }
-		.search-title{
-
-		    text-align:center;
-
-		    font-size:28px;
-
-		    font-weight:bold;
-
-		    margin-bottom:25px;
-
-		}
-
-		.search-row{
-
-		    display:flex;
-
-		    gap:15px;
-
-		    margin-bottom:20px;
-
-		}
-
-		.category-row{
-
-		    display:flex;
-
-		    gap:15px;
-
-		    margin-bottom:15px;
-
-		}
-
-		.category-row select{
-
-		    flex:1;
-
-		    padding:12px;
-
-		    border:1px solid #ddd;
-
-		    border-radius:10px;
-
-		    font-size:15px;
-
-		    background:white;
-
-		    cursor:pointer;
-
-		    transition:.2s;
-
-		}
-
-		.category-row select:hover{
-
-		    border-color:#2563eb;
-
-		}
-
-		.input-text{
-
-		    flex:1;
-
-		    padding:14px 16px;
-
-		    border-radius:10px;
-
-		    border:1px solid #ddd;
-
-		    font-size:16px;
-
-		}
-
-		.tag-container{
-
-		    margin-top:25px;
-
-		    display:flex;
-
-		    gap:10px;
-
-		    flex-wrap:wrap;
-
-		    align-items:center;
-
-		}
-
-		.tag-title{
-
-		    font-weight:bold;
-
-		    color:#64748b;
-
-		    margin-right:10px;
-
-		}
-
-		.tag{
-
-		    background:#eef4ff;
-
-		    color:#2563eb;
-
-		    padding:8px 16px;
-
-		    border-radius:20px;
-
-		    text-decoration:none;
-
-		    transition:.2s;
-
-		    font-weight:600;
-
-		}
-
-		.tag:hover{
-
-		    background:#2563eb;
-
-		    color:white;
-
-		}
     </style>
 </head>
 <body>
@@ -242,90 +101,38 @@
             <a href="/products/new" class="btn btn-primary" style="background:#10b981;">+ 商品を出品する</a>
         </div>
 
-		<div class="search-section">
-
-		    <h2 class="search-title">📚 商品を探す</h2>
-
-		    <form th:action="@{/products}" method="get">
-
-		        <!-- キーワード検索 -->
-		        <div class="search-row">
-
-		            <input
-		                type="text"
-		                name="keyword"
-		                class="input-text"
-		                placeholder="🔍 商品名・教科書名・キーワードを入力">
-
-		            <button type="submit" class="btn btn-primary">
-		                検索
-		            </button>
-
-		        </div>
-
-		        <!-- カテゴリ -->
-		        <div class="category-row">
-
-		            <select name="mainCategory">
-		                <option value="">大分類</option>
-		                <option value="教科書">📚 教科書</option>
-		                <option value="家電">💻 家電</option>
-		                <option value="家具">🪑 家具</option>
-		                <option value="日用品">🧴 日用品</option>
-		            </select>
-
-		            <select name="middleCategory">
-		                <option value="">中分類</option>
-		            </select>
-
-		            <select name="smallCategory">
-		                <option value="">小分類</option>
-		            </select>
-
-		        </div>
-
-		        <!-- 条件 -->
-		        <div class="category-row">
-
-		            <select name="price">
-		                <option value="">💰価格</option>
-		                <option value="1000">～1000円</option>
-		                <option value="3000">～3000円</option>
-		                <option value="5000">～5000円</option>
-		            </select>
-
-		            <select name="delivery">
-		                <option value="">📍受渡方法</option>
-		                <option value="hand">手渡し</option>
-		                <option value="delivery">配送</option>
-		            </select>
-
-		            <select name="sort">
-		                <option value="">並び替え</option>
-		                <option value="new">新着順</option>
-		                <option value="priceAsc">価格が安い順</option>
-		                <option value="priceDesc">価格が高い順</option>
-		            </select>
-
-		        </div>
-
-		    </form>
-
-		    <div class="tag-container">
-
-		        <span class="tag-title">人気カテゴリ</span>
-
-		        <a href="/products?category=教科書" class="tag">📚 教科書</a>
-
-		        <a href="/products?category=家電" class="tag">💻 家電</a>
-
-		        <a href="/products?category=家具" class="tag">🪑 家具</a>
-
-		        <a href="/products?category=日用品" class="tag">🧴 日用品</a>
-
-		    </div>
-
-		</div>
+        <!-- 💡 検索セクション：大中小分類の3連選択ボックスを綺麗に統合 -->
+        <div class="search-section">
+            <form th:action="@{/products}" method="get" class="search-form">
+                <div class="search-row">
+                    <input type="text" name="keyword" class="input-text" placeholder="キーワードから検索...">
+                    <button type="submit" class="btn btn-primary">検索</button>
+                </div>
+                
+                <!-- 💡 3連選択ボックスの配置行 -->
+                <div class="search-row">
+                    <select id="bigCategory" class="select-control">
+                        <option value="">-- 全ての大分類 --</option>
+                    </select>
+                    <select id="midCategory" class="select-control" disabled>
+                        <option value="">-- 全ての中分類 --</option>
+                    </select>
+                    <select id="smallCategorySelect" class="select-control" disabled>
+                        <option value="">-- 全ての小分類 --</option>
+                    </select>
+                    <!-- 実際にサーバーへ送信されるカテゴリID用の隠しパラメータ -->
+                    <input type="hidden" name="categoryId" id="finalCategoryId">
+                </div>
+            </form>
+            
+            <div class="tag-container">
+                <span style="font-size:0.85rem; color:var(--text-muted); align-self:center;">🏷️ 定番タグ:</span>
+                <a href="/products" class="tag">全て見る</a>
+                <a href="/products?category=教科書" class="tag">#教科書</a>
+                <a href="/products?category=小型家電" class="tag">#家電</a>
+                <a href="/products?category=収納ボックス、クッション、ポスター" class="tag">#家具</a>
+                <a href="/products?category=消耗品" class="tag">#日用品</a>
+            </div>
         </div>
 
         <div class="grid">
@@ -345,5 +152,84 @@
         </div>
     </div>
 
-</body>
+    <!-- 💡 大中小連動処理のためのJavaScriptを埋め込み -->
+    <script th:inline="javascript">
+        const categoryData = /*[[${categories}]]*/ [];
 
+        const bigSelect = document.getElementById('bigCategory');
+        const midSelect = document.getElementById('midCategory');
+        const smallSelect = document.getElementById('smallCategorySelect');
+        const finalInput = document.getElementById('finalCategoryId');
+
+        // 1. 大分類を生成
+        const bigCategories = [...new Set(categoryData.map(c => c.bigCategory))];
+        bigCategories.forEach(big => {
+            if(big) {
+                const opt = document.createElement('option');
+                opt.value = big; opt.textContent = big;
+                bigSelect.appendChild(opt);
+            }
+        });
+
+        // 2. 大分類選択時の連動
+        bigSelect.addEventListener('change', function() {
+            midSelect.innerHTML = '<option value="">-- 全ての中分類 --</option>';
+            smallSelect.innerHTML = '<option value="">-- 全ての小分類 --</option>';
+            midSelect.disabled = true; smallSelect.disabled = true;
+            finalInput.value = "";
+
+            if (!this.value) return;
+
+            const filtered = categoryData.filter(c => c.bigCategory === this.value);
+            const midCategories = [...new Set(filtered.map(c => c.midCategory))];
+
+            midCategories.forEach(mid => {
+                if(mid) {
+                    const opt = document.createElement('option');
+                    opt.value = mid; opt.textContent = mid;
+                    midSelect.appendChild(opt);
+                }
+            });
+            midSelect.disabled = false;
+        });
+
+        // 3. 中分類選択時の連動
+        midSelect.addEventListener('change', function() {
+            smallSelect.innerHTML = '<option value="">-- 全ての小分類 --</option>';
+            smallSelect.disabled = true;
+            finalInput.value = "";
+
+            if (!this.value) return;
+
+            const filtered = categoryData.filter(c => c.bigCategory === bigSelect.value && c.midCategory === this.value);
+            
+            if (filtered.length > 0) {
+                finalInput.value = filtered[0].id; // 一時的なIDセット
+            }
+
+            let hasSmall = false;
+            filtered.forEach(c => {
+                if(c.smallCategory) {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.smallCategory;
+                    smallSelect.appendChild(opt);
+                    hasSmall = true;
+                }
+            });
+
+            if (hasSmall) smallSelect.disabled = false;
+        });
+
+        // 4. 小分類選択時の確定
+        smallSelect.addEventListener('change', function() {
+            if (this.value) {
+                finalInput.value = this.value;
+            } else {
+                const filtered = categoryData.filter(c => c.bigCategory === bigSelect.value && c.midCategory === midSelect.value);
+                if (filtered.length > 0) finalInput.value = filtered[0].id;
+            }
+        });
+    </script>
+</body>
+</html>
