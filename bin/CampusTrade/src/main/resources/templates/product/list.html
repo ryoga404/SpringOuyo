@@ -51,32 +51,6 @@
         .search-section { background: var(--surface); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 2rem; }
         .search-form { display: flex; gap: 0.75rem; }
         .input-text { flex: 1; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; outline: none; }
-		.category-row{
-		    display:flex;
-		    gap:15px;
-		    margin-top:15px;
-		}
-
-		.category-row select{
-		    flex:1;
-		    padding:0.75rem 1rem;
-		    border:1px solid var(--border);
-		    border-radius:8px;
-		    font-size:1rem;
-		    background:#fff;
-		    outline:none;
-		    cursor:pointer;
-		}
-
-		.category-row select:focus{
-		    border-color:var(--primary);
-		}
-
-		.search-section{
-		    display:flex;
-		    flex-direction:column;
-		    gap:15px;
-		}
         .tag-container { display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; }
         .tag { background: #f1f5f9; color: var(--text-muted); padding: 0.3rem 0.75rem; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; }
         .tag:hover { background: var(--primary); color: white; }
@@ -92,127 +66,6 @@
         .OPEN { background: #e0f2fe; color: #0369a1; }
         .LOCKED { background: #fef3c7; color: #b45309; }
         .CLOSED { background: #f1f5f9; color: #475569; }
-		.search-title{
-
-		    text-align:center;
-
-		    font-size:28px;
-
-		    font-weight:bold;
-
-		    margin-bottom:25px;
-
-		}
-
-		.search-row{
-
-		    display:flex;
-
-		    gap:15px;
-
-		    margin-bottom:20px;
-
-		}
-
-		.category-row{
-
-		    display:flex;
-
-		    gap:15px;
-
-		    margin-bottom:15px;
-
-		}
-
-		.category-row select{
-
-		    flex:1;
-
-		    padding:12px;
-
-		    border:1px solid #ddd;
-
-		    border-radius:10px;
-
-		    font-size:15px;
-
-		    background:white;
-
-		    cursor:pointer;
-
-		    transition:.2s;
-
-		}
-
-		.category-row select:hover{
-
-		    border-color:#2563eb;
-
-		}
-
-		.input-text{
-
-		    flex:1;
-
-		    padding:14px 16px;
-
-		    border-radius:10px;
-
-		    border:1px solid #ddd;
-
-		    font-size:16px;
-
-		}
-
-		.tag-container{
-
-		    margin-top:25px;
-
-		    display:flex;
-
-		    gap:10px;
-
-		    flex-wrap:wrap;
-
-		    align-items:center;
-
-		}
-
-		.tag-title{
-
-		    font-weight:bold;
-
-		    color:#64748b;
-
-		    margin-right:10px;
-
-		}
-
-		.tag{
-
-		    background:#eef4ff;
-
-		    color:#2563eb;
-
-		    padding:8px 16px;
-
-		    border-radius:20px;
-
-		    text-decoration:none;
-
-		    transition:.2s;
-
-		    font-weight:600;
-
-		}
-
-		.tag:hover{
-
-		    background:#2563eb;
-
-		    color:white;
-
-		}
     </style>
 </head>
 <body>
@@ -242,90 +95,30 @@
             <a href="/products/new" class="btn btn-primary" style="background:#10b981;">+ 商品を出品する</a>
         </div>
 
-		<div class="search-section">
+        <div class="search-section">
+            <form th:action="@{/products}" method="get" class="search-form">
+                <input type="text" name="keyword" class="input-text" placeholder="キーワードから検索...">
+                <button type="submit" class="btn btn-primary">検索</button>
+            </form>
+			<div class="category-select">
 
-		    <h2 class="search-title">📚 商品を探す</h2>
+			    <select name="largeCategory" id="largeCategory">
+			        <option value="">大分類</option>
+			        <option value="教材">教材</option>
+			        <option value="家電">家電</option>
+			        <option value="家具">家具</option>
+			        <option value="日用品">日用品</option>
+			    </select>
 
-		    <form th:action="@{/products}" method="get">
+			    <select name="middleCategory" id="middleCategory">
+			        <option value="">中分類</option>
+			    </select>
 
-		        <!-- キーワード検索 -->
-		        <div class="search-row">
+			    <select name="smallCategory" id="smallCategory">
+			        <option value="">小分類</option>
+			    </select>
 
-		            <input
-		                type="text"
-		                name="keyword"
-		                class="input-text"
-		                placeholder="🔍 商品名・教科書名・キーワードを入力">
-
-		            <button type="submit" class="btn btn-primary">
-		                検索
-		            </button>
-
-		        </div>
-
-		        <!-- カテゴリ -->
-		        <div class="category-row">
-
-		            <select name="mainCategory">
-		                <option value="">大分類</option>
-		                <option value="教科書">📚 教科書</option>
-		                <option value="家電">💻 家電</option>
-		                <option value="家具">🪑 家具</option>
-		                <option value="日用品">🧴 日用品</option>
-		            </select>
-
-		            <select name="middleCategory">
-		                <option value="">中分類</option>
-		            </select>
-
-		            <select name="smallCategory">
-		                <option value="">小分類</option>
-		            </select>
-
-		        </div>
-
-		        <!-- 条件 -->
-		        <div class="category-row">
-
-		            <select name="price">
-		                <option value="">💰価格</option>
-		                <option value="1000">～1000円</option>
-		                <option value="3000">～3000円</option>
-		                <option value="5000">～5000円</option>
-		            </select>
-
-		            <select name="delivery">
-		                <option value="">📍受渡方法</option>
-		                <option value="hand">手渡し</option>
-		                <option value="delivery">配送</option>
-		            </select>
-
-		            <select name="sort">
-		                <option value="">並び替え</option>
-		                <option value="new">新着順</option>
-		                <option value="priceAsc">価格が安い順</option>
-		                <option value="priceDesc">価格が高い順</option>
-		            </select>
-
-		        </div>
-
-		    </form>
-
-		    <div class="tag-container">
-
-		        <span class="tag-title">人気カテゴリ</span>
-
-		        <a href="/products?category=教科書" class="tag">📚 教科書</a>
-
-		        <a href="/products?category=家電" class="tag">💻 家電</a>
-
-		        <a href="/products?category=家具" class="tag">🪑 家具</a>
-
-		        <a href="/products?category=日用品" class="tag">🧴 日用品</a>
-
-		    </div>
-
-		</div>
+			</div>
         </div>
 
         <div class="grid">
@@ -346,4 +139,4 @@
     </div>
 
 </body>
-
+</html>

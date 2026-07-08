@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品出品 - CampusTrade</title>
+    <style>
+        :root {
+            --primary: #2563eb; --primary-dark: #1d4ed8; --bg: #f8fafc;
+            --surface: #ffffff; --text: #0f172a; --text-muted: #64748b;
+            --border: #e2e8f0; --danger: #ef4444;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; line-height: 1.5; }
+        .navbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; }
+        .logo { font-size: 1.5rem; font-weight: 800; color: var(--primary); text-decoration: none; }
+        .container { max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .back-link { display: inline-flex; align-items: center; color: var(--text-muted); text-decoration: none; font-weight: 600; margin-bottom: 1rem; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-label { display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.95rem; }
+        .form-control { width: 100%; box-sizing: border-box; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; outline: none; transition: border 0.2s; }
+        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .btn { width: 100%; padding: 0.75rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-size: 1rem; transition: background 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .alert-danger { background: #fee2e2; border: 1px solid #fca5a5; color: var(--danger); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-weight: 600; font-size: 0.95rem; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="/products" class="logo">🏫 CampusTrade</a>
+    </nav>
+
+    <div class="container">
+        <a href="/products" class="back-link">← 一覧に戻る</a>
+
+        <div class="card">
+            <h1 style="margin: 0 0 1.5rem 0; font-weight: 800; font-size: 1.5rem;">🎒 新しい商品を出品</h1>
+
+            <div th:if="${param.error}" class="alert-danger">
+                ⚠️ 金額が大きすぎるか不正です。9,999,999円以下で入力してください。
+            </div>
+
+            <form th:action="@{/products/save}" method="post">
+                <div class="form-group">
+                    <label class="form-label">商品名</label>
+                    <input type="text" name="productName" class="form-control" placeholder="例: 応用情報技術者の教科書" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">カテゴリ</label>
+                    <input type="text" name="category" class="form-control" placeholder="例: 教科書、家具、家電" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">希望価格 (円)</label>
+                    <input type="number" name="price" class="form-control" max="9999999" placeholder="金額（最大 9,999,999円）" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">商品説明</label>
+                    <textarea name="description" class="form-control" rows="5" placeholder="商品の状態や、受け渡し可能な場所（例: 〇〇キャンパス食堂前）などを記入してください。" required></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">🚀 この内容で出品する</button>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>
