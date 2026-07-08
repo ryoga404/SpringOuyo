@@ -28,7 +28,8 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(auth -> auth
                 // ⭕ /register を追加して、未ログインでもユーザー登録画面を開けるようにします
-                .requestMatchers("/login", "/register", "/css/**", "/js/**").permitAll()
+            		// SecurityConfig.java 内の該当箇所
+            		.requestMatchers("/login", "/register", "/", "/home", "/products", "/css/**", "/js/**").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

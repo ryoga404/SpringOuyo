@@ -15,6 +15,14 @@ public class User {
         this.role = role;
     }
 
+    // 💡 HTMLエラー防止用：nicknameの代わりにemailの＠より前を返す
+    public String getNickname() {
+        if (this.email != null && this.email.contains("@")) {
+            return this.email.split("@")[0];
+        }
+        return this.email;
+    }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
