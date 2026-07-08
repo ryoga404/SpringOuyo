@@ -14,7 +14,27 @@
         button:hover { background-color: #0056b3; }
         .error { color: red; text-align: center; margin-bottom: 16px; }
         .logout { color: green; text-align: center; margin-bottom: 16px; }
-    </style>
+		#register_button {color: blue; text-decoration: none; margin-top: 15px;}		#register_button {
+		    display: block;
+		    width: 100%;
+		    padding: 12px;
+		    margin-top: 15px;
+		    background-color: #ffffff;
+		    border: 1px solid #007bff;
+		    color: #007bff;
+		    font-weight: bold;
+		    border-radius: 4px;
+		    text-align: center;
+		    text-decoration: none;
+		    box-sizing: border-box;
+		    transition: all 0.2s ease;
+		}
+
+		#register_button:hover {
+		    background-color: #007bff;
+		    color: white;
+		}
+    </style>1
 </head>
 <body>
     <div class="login-container">
@@ -39,6 +59,9 @@
             </div>
             <button type="submit">ログイン</button>
         </form>
+		
+		<a th:href="@{/register}" id="register_button">ユーザ登録へ</a>
+		
     </div>
 </body>
 </html>
