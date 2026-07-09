@@ -90,6 +90,7 @@
                 <h1 style="margin: 0; font-weight: 800; font-size: 1.75rem;" th:text="${product.productName}">商品名</h1>
                 <span class="badge" th:classappend="${product.status}" th:text="${product.status}">OPEN</span>
             </div>
+            <img th:if="${product.hasImage}" th:src="@{'/images/products/' + ${product.id} + '.jpg'}" alt="商品画像" style="width:100%; max-height:400px; object-fit:cover; border-radius:8px; margin: 1rem 0;">
             <div class="price" th:text="${product.price}">0</div>
             <div class="info-grid">
                 <div><span style="font-size:0.8rem;color:var(--text-muted);">カテゴリ</span><br><strong th:text="${product.category}">本</strong></div>
@@ -109,15 +110,21 @@
                     <input type="hidden" name="newStatus" value="LOCKED">
                     <button type="submit" class="btn btn-warning">🤝 購入申込（LOCKEDへ）</button>
                 </form>
-                <!-- 取引完了ボタンは、LOCKED状態かつ出品者・購入者本人にのみ表示 -->
-                <form th:if="${product.status == 'LOCKED' and isBuyerOrSeller}"
-                      th:action="@{/products/{id}/status(id=${product.id})}" method="post" style="margin: 0;">
-                    <input type="hidden" name="newStatus" value="CLOSED">
-                    <button type="submit" class="btn btn-success">📦 取引完了（CLOSEDへ）</button>
+                <!-- 取引完了ボタンは、LOCKED状態かつ出品者・購入者本人にのみ表示。双方が確認すると自動的にCLOSEDになる -->
+                <form th:if="${product.status == 'LOCKED' and isBuyerOrSeller and !myConfirmed}"
+                      th:action="@{/products/{id}/confirm-complete(id=${product.id})}" method="post" style="margin: 0;">
+                    <button type="submit" class="btn btn-success">📦 取引完了を確認する</button>
                 </form>
-                <span th:if="${product.status == 'CLOSED'}" style="color: var(--text-muted); font-weight: 600; align-self: center;">✅ この取引は完了しました</span>
+                <span th:if="${product.status == 'LOCKED' and isBuyerOrSeller and myConfirmed}" style="color: var(--success); font-weight: 700; align-self: center; font-size: 0.85rem;">
+                    ✅ あなたは確認済みです。相手の確認を待っています&hellip;
+                </span>
+                <span th:if="${product.status == 'CLOSED'}" style="color: var(--text-muted); font-weight: 600; align-self: center;">✅ この取引は双方の確認により完了しました</span>
                 <span th:if="${product.status == '禁止'}" style="color: var(--danger); font-weight: 700; align-self: center;">🚫 この商品は規約違反のため非表示になっています</span>
                 <span th:if="${product.status == 'OPEN' and isSeller}" style="color: var(--text-muted); font-weight: 600; align-self: center; font-size: 0.85rem;">出品中（自分の商品）</span>
+            </div>
+            <div th:if="${product.status == 'LOCKED' and isBuyerOrSeller}" style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted); display:flex; gap:1rem;">
+                <span th:text="${product.sellerConfirmed} ? '出品者: ✅確認済み' : '出品者: 未確認'">出品者</span>
+                <span th:text="${product.buyerConfirmed} ? '購入者: ✅確認済み' : '購入者: 未確認'">購入者</span>
             </div>
         </div>
 

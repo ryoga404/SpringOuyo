@@ -42,7 +42,14 @@
 
             <div th:if="${errorMessage}" class="alert-danger" th:text="${errorMessage}">エラー</div>
 
-            <form th:action="${isEdit} ? @{/products/{id}/edit(id=${product.id})} : @{/products/save}" method="post">
+            <form th:action="${isEdit} ? @{/products/{id}/edit(id=${product.id})} : @{/products/save}" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label class="form-label">商品画像（任意）</label>
+                    <img th:if="${isEdit and product.hasImage}" th:src="@{'/images/products/' + ${product.id} + '.jpg'}" alt="現在の画像" style="width:100%; max-height:220px; object-fit:cover; border-radius:8px; margin-bottom:0.5rem;">
+                    <input type="file" name="image" class="form-control" accept="image/*">
+                    <p th:if="${isEdit and product.hasImage}" style="font-size:0.8rem; color:var(--text-muted); margin: 0.4rem 0 0 0;">新しい画像を選択しなければ現在の画像のままになります。</p>
+                </div>
+
                 <div class="form-group">
                     <label class="form-label">商品名</label>
                     <input type="text" name="productName" class="form-control" th:value="${product.productName}" placeholder="例: 応用情報技術者の教科書" maxlength="255" required>

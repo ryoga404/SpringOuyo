@@ -63,6 +63,8 @@
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
         .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow: 0.2s; text-decoration: none; color: inherit; display: flex; flex-direction: column; }
         .card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .card-thumb { width: 100%; height: 160px; object-fit: cover; background: #f1f5f9; display: block; }
+        .card-thumb-placeholder { width: 100%; height: 160px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 2rem; }
         .card-body { padding: 1.25rem; display: flex; flex-direction: column; flex: 1; }
         .card-title { font-size: 1.15rem; font-weight: 700; margin: 0 0 0.5rem 0; color: var(--text); }
         .price-tag { font-size: 1.4rem; font-weight: 800; color: var(--danger); margin-bottom: 0.75rem; }
@@ -81,7 +83,7 @@
         
         <div class="dropdown">
             <div class="user-name-btn">
-                👤 <span sec:authentication="name">ゲスト</span> さん
+                👤 <span th:text="${loginUser != null ? loginUser.nickname : 'ゲスト'}">ゲスト</span> さん
             </div>
             <div class="dropdown-menu">
                 <a href="/products/mypage">📂 マイページ</a>
@@ -138,6 +140,8 @@
 
         <div class="grid">
             <a th:each="product : ${products}" th:href="@{/products/{id}(id=${product.id})}" class="card">
+                <img th:if="${product.hasImage}" th:src="@{'/images/products/' + ${product.id} + '.jpg'}" class="card-thumb" alt="商品画像">
+                <div th:unless="${product.hasImage}" class="card-thumb-placeholder">🖼️</div>
                 <div class="card-body">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.25rem;">
                         <span class="badge" th:classappend="${product.status}" th:text="${product.status}">OPEN</span>

@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.example.demo.dao.FavoriteDao;
@@ -20,6 +22,7 @@ import com.example.demo.model.Category;
 import com.example.demo.model.Message;
 import com.example.demo.model.Product;
 import com.example.demo.model.User;
+import com.example.demo.service.ProductImageService;
 import com.example.demo.service.UserService;
 
 @Controller
@@ -29,12 +32,15 @@ public class ProductController {
     private final MessageDao messageDao;
     private final FavoriteDao favoriteDao;
     private final UserService userService;
+    private final ProductImageService productImageService;
 
-    public ProductController(ProductDaoImpl productDao, MessageDao messageDao, FavoriteDao favoriteDao, UserService userService) {
+    public ProductController(ProductDaoImpl productDao, MessageDao messageDao, FavoriteDao favoriteDao,
+            UserService userService, ProductImageService productImageService) {
         this.productDao = productDao;
         this.messageDao = messageDao;
         this.favoriteDao = favoriteDao;
         this.userService = userService;
+        this.productImageService = productImageService;
     }
 
     private User currentUser(Authentication authentication) {
@@ -54,6 +60,9 @@ public class ProductController {
             Model model) {
 
         List<Product> products = productDao.findByConditions(keyword, tagCategory, categoryId, price, delivery, sort);
+        // ⭕ 一覧のサムネイル表示用に、それぞれの商品の画像有無をチェックしておく
+        products.forEach(p -> p.setHasImage(productImageService.hasImage(p.getId())));
+
         List<Category> categories = productDao.findAllCategories();
 
         model.addAttribute("products", products);
@@ -72,6 +81,7 @@ public class ProductController {
             // ⭕ 存在しない商品IDが指定された場合は404エラーページを表示する
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "指定された商品が見つかりません");
         }
+        product.setHasImage(productImageService.hasImage(id));
 
         User currentUser = currentUser(authentication);
         Long currentUserId = currentUser != null ? currentUser.getId() : null;
@@ -93,6 +103,9 @@ public class ProductController {
 
         boolean isFavorite = currentUserId != null && favoriteDao.exists(currentUserId, id);
 
+        // ⭕ 自分側が取引完了の確認済みかどうか（双方確認式のボタン制御用）
+        boolean myConfirmed = isSeller ? product.isSellerConfirmed() : (isBuyer && product.isBuyerConfirmed());
+
         model.addAttribute("product", product);
         model.addAttribute("messages", messages);
         model.addAttribute("canViewMessages", canViewMessages);
@@ -101,11 +114,12 @@ public class ProductController {
         model.addAttribute("isBuyerOrSeller", isBuyerOrSeller);
         model.addAttribute("currentUserId", currentUserId);
         model.addAttribute("isFavorite", isFavorite);
+        model.addAttribute("myConfirmed", myConfirmed);
 
         return "product/detail";
     }
 
-    // 💡 取引ステータス更新（購入申込 → LOCKED、取引完了 → CLOSED）
+    // 💡 購入申込（OPEN → LOCKED）
     @PostMapping("/products/{id}/status")
     public String updateStatus(@PathVariable("id") Long id, @RequestParam("newStatus") String newStatus, Authentication authentication) {
         Product product = productDao.findById(id);
@@ -123,12 +137,28 @@ public class ProductController {
             if ("OPEN".equals(product.getStatus()) && !isSeller) {
                 productDao.updateStatus(id, "LOCKED", currentUser.getId());
             }
-        } else if ("CLOSED".equals(newStatus)) {
-            boolean isBuyerOrSeller = currentUser.getId().equals(product.getSellerId())
-                    || currentUser.getId().equals(product.getBuyerId());
-            if ("LOCKED".equals(product.getStatus()) && isBuyerOrSeller) {
-                productDao.updateStatus(id, "CLOSED", product.getBuyerId());
-            }
+        }
+
+        return "redirect:/products/" + id;
+    }
+
+    // 💡 取引完了の確認（双方が確認したら自動的に CLOSED になる）
+    @PostMapping("/products/{id}/confirm-complete")
+    public String confirmComplete(@PathVariable("id") Long id, Authentication authentication) {
+        Product product = productDao.findById(id);
+        if (product == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "指定された商品が見つかりません");
+        }
+
+        User currentUser = currentUser(authentication);
+        if (currentUser == null || !"LOCKED".equals(product.getStatus())) {
+            return "redirect:/products/" + id;
+        }
+
+        boolean isSeller = currentUser.getId().equals(product.getSellerId());
+        boolean isBuyer = currentUser.getId().equals(product.getBuyerId());
+        if (isSeller || isBuyer) {
+            productDao.confirmCompletion(id, isSeller);
         }
 
         return "redirect:/products/" + id;
@@ -164,6 +194,7 @@ public class ProductController {
             @RequestParam("description") String description,
             @RequestParam("price") Integer price,
             @RequestParam(name = "categoryId", required = false) Integer categoryId,
+            @RequestParam(name = "image", required = false) MultipartFile image,
             Authentication authentication,
             Model model) {
 
@@ -185,6 +216,14 @@ public class ProductController {
         product.setSellerId(currentUser.getId());
 
         Long newId = productDao.save(product);
+
+        // ⭕ 画像が指定されていれば、商品IDのファイル名で保存する
+        try {
+            productImageService.saveImage(newId, image);
+        } catch (IOException e) {
+            // 画像保存に失敗しても出品自体は成立させる（画像なし扱い）
+        }
+
         return "redirect:/products/" + newId;
     }
 
@@ -205,6 +244,7 @@ public class ProductController {
             // 交渉開始後の商品は編集不可
             return "redirect:/products/" + id;
         }
+        product.setHasImage(productImageService.hasImage(id));
 
         model.addAttribute("product", product);
         model.addAttribute("categories", productDao.findAllCategories());
@@ -219,6 +259,7 @@ public class ProductController {
             @RequestParam("description") String description,
             @RequestParam("price") Integer price,
             @RequestParam(name = "categoryId", required = false) Integer categoryId,
+            @RequestParam(name = "image", required = false) MultipartFile image,
             Authentication authentication,
             Model model) {
 
@@ -241,6 +282,7 @@ public class ProductController {
             existing.setDescription(description);
             existing.setPrice(price);
             existing.setCategoryId(categoryId);
+            existing.setHasImage(productImageService.hasImage(id));
             return reShowForm(model, existing, productName, description, price, categoryId, validationError, true);
         }
 
@@ -253,6 +295,14 @@ public class ProductController {
         product.setSellerId(currentUser.getId());
 
         productDao.update(product);
+
+        // ⭕ 新しい画像が選択されていれば上書き保存（未選択なら既存の画像をそのまま維持）
+        try {
+            productImageService.saveImage(id, image);
+        } catch (IOException e) {
+            // 画像保存に失敗しても更新自体は成立させる
+        }
+
         return "redirect:/products/" + id;
     }
 
@@ -275,6 +325,7 @@ public class ProductController {
         }
 
         productDao.delete(id);
+        productImageService.deleteImage(id);
         return "redirect:/products/mypage";
     }
 

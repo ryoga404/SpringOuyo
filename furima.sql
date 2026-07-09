@@ -93,7 +93,9 @@ CREATE TABLE `products` (
   `category_id` int(5) DEFAULT NULL,
   `status` varchar(255) NOT NULL DEFAULT 'OPEN',
   `seller_id` bigint(20) DEFAULT NULL,
-  `buyer_id` bigint(20) DEFAULT NULL
+  `buyer_id` bigint(20) DEFAULT NULL,
+  `seller_confirmed` tinyint(1) NOT NULL DEFAULT 0,
+  `buyer_confirmed` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --

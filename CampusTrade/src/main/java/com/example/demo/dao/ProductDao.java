@@ -16,8 +16,11 @@ public interface ProductDao {
     // 商品詳細画面用：1件取得
     Product findById(Long id);
 
-    // 取引ステータスを更新（LOCKEDにする際は買い手のIDを、CLOSEDの際は既存の買い手IDをそのまま渡す）
+    // 取引ステータスを更新（LOCKEDにする際は買い手のIDを渡す。確認フラグはリセットされる）
     void updateStatus(Long id, String status, Long buyerId);
+
+    // ⭕ 取引完了の双方確認：自分側の確認フラグを立て、両方揃ったら status を CLOSED にする
+    void confirmCompletion(Long id, boolean isSeller);
 
     // ⭕ 商品出品：新規登録し、生成されたIDを返す
     Long save(Product product);

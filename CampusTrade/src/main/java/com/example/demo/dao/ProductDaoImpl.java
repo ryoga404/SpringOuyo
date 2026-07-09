@@ -35,6 +35,8 @@ public class ProductDaoImpl implements ProductDao {
                 rs.getLong("seller_id"),
                 rs.getObject("buyer_id") != null ? rs.getLong("buyer_id") : null
         );
+        product.setSellerConfirmed(rs.getBoolean("seller_confirmed"));
+        product.setBuyerConfirmed(rs.getBoolean("buyer_confirmed"));
 
         // 大分類・中分類・小分類を結合したものを仮のカテゴリ文字列として設定
         String big = rs.getString("BigCategory");
@@ -148,8 +150,22 @@ public class ProductDaoImpl implements ProductDao {
 
     @Override
     public void updateStatus(Long id, String status, Long buyerId) {
-        String sql = "UPDATE products SET status = ?, buyer_id = ? WHERE id = ?";
+        String sql = "UPDATE products SET status = ?, buyer_id = ?, seller_confirmed = 0, buyer_confirmed = 0 WHERE id = ?";
         jdbcTemplate.update(sql, status, buyerId, id);
+    }
+
+    // ⭕ 取引完了の双方確認：自分側のフラグを立て、両方揃えば自動的に CLOSED にする
+    @Override
+    public void confirmCompletion(Long id, boolean isSeller) {
+        if (isSeller) {
+            jdbcTemplate.update("UPDATE products SET seller_confirmed = 1 WHERE id = ?", id);
+        } else {
+            jdbcTemplate.update("UPDATE products SET buyer_confirmed = 1 WHERE id = ?", id);
+        }
+        jdbcTemplate.update(
+                "UPDATE products SET status = 'CLOSED' WHERE id = ? AND status = 'LOCKED' " +
+                "AND seller_confirmed = 1 AND buyer_confirmed = 1",
+                id);
     }
 
     // ⭕ 商品出品：新規登録
