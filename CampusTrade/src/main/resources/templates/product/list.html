@@ -105,7 +105,7 @@
         <div class="search-section">
             <form th:action="@{/products}" method="get" class="search-form">
                 <div class="search-row">
-                    <input type="text" name="keyword" class="input-text" placeholder="キーワードから検索...">
+                    <input type="text" name="keyword" class="input-text" placeholder="キーワードから検索..." th:value="${keyword}">
                     <button type="submit" class="btn btn-primary">検索</button>
                 </div>
                 
@@ -155,6 +155,7 @@
     <!-- 💡 大中小連動処理のためのJavaScriptを埋め込み -->
     <script th:inline="javascript">
         const categoryData = /*[[${categories}]]*/ [];
+        const selectedCategoryId = /*[[${selectedCategoryId}]]*/ null;
 
         const bigSelect = document.getElementById('bigCategory');
         const midSelect = document.getElementById('midCategory');
@@ -230,6 +231,26 @@
                 if (filtered.length > 0) finalInput.value = filtered[0].id;
             }
         });
+
+        // 5. 検索後にページが再読み込みされたとき、選択されていた大・中・小分類を復元する
+        if (selectedCategoryId) {
+            const selected = categoryData.find(c => c.id === selectedCategoryId);
+            if (selected) {
+                bigSelect.value = selected.bigCategory;
+                bigSelect.dispatchEvent(new Event('change'));
+
+                if (selected.midCategory) {
+                    midSelect.value = selected.midCategory;
+                    midSelect.dispatchEvent(new Event('change'));
+                }
+
+                if (selected.smallCategory) {
+                    smallSelect.value = selected.id;
+                }
+
+                finalInput.value = selectedCategoryId;
+            }
+        }
     </script>
 </body>
 </html>

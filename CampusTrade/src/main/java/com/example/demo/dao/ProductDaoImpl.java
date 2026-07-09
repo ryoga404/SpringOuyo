@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import com.example.demo.model.Category;
 import com.example.demo.model.Product;
 import com.example.demo.model.User;
 
@@ -52,11 +53,15 @@ public class ProductDaoImpl implements ProductDao {
     @Override
     public List<Product> findAll() {
         // 条件なしの全件検索（初期表示用など）
-        return findByConditions(null, null, null, null, null);
+        return findByConditions(null, null, null, null, null, null);
     }
 
     // 💡 動的検索を行うための新しいメソッド
-    public List<Product> findByConditions(String keyword, String mainCategory, String price, String delivery, String sort) {
+    // keyword: 商品名・説明のキーワード検索
+    // tagCategory: 人気タグ用。大・中・小分類のいずれかに一致するものを検索
+    // categoryId: 3連選択ボックス（大→中→小）で確定したカテゴリID
+    @Override
+    public List<Product> findByConditions(String keyword, String tagCategory, Integer categoryId, String price, String delivery, String sort) {
         StringBuilder sql = new StringBuilder(
             "SELECT p.*, c.BigCategory, c.MidCategory, c.SmallCategory, u.email AS seller_email " +
             "FROM products p " +
@@ -75,10 +80,18 @@ public class ProductDaoImpl implements ProductDao {
             params.add(likeParam);
         }
 
-        // 2. 大分類カテゴリ検索
-        if (mainCategory != null && !mainCategory.trim().isEmpty()) {
-            sql.append("AND c.BigCategory = ? ");
-            params.add(mainCategory.trim());
+        // 2. 人気タグからのカテゴリ検索（大・中・小分類のいずれかに一致すればヒット）
+        if (tagCategory != null && !tagCategory.trim().isEmpty()) {
+            sql.append("AND (c.BigCategory = ? OR c.MidCategory = ? OR c.SmallCategory = ?) ");
+            params.add(tagCategory.trim());
+            params.add(tagCategory.trim());
+            params.add(tagCategory.trim());
+        }
+
+        // 2-2. 3連選択ボックスで確定したカテゴリIDによる絞り込み
+        if (categoryId != null) {
+            sql.append("AND c.id = ? ");
+            params.add(categoryId);
         }
 
         // 3. 価格帯抽出 (～1000円、～3000円、～5000円)
@@ -119,5 +132,17 @@ public class ProductDaoImpl implements ProductDao {
         }
 
         return jdbcTemplate.query(sql.toString(), productRowMapper, params.toArray());
+    }
+
+    // 💡 大・中・小の3連選択ボックスをJS側で構築するための元データ一覧を取得
+    @Override
+    public List<Category> findAllCategories() {
+        String sql = "SELECT id, BigCategory, MidCategory, SmallCategory FROM category ORDER BY id";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> new Category(
+                rs.getInt("id"),
+                rs.getString("BigCategory"),
+                rs.getString("MidCategory"),
+                rs.getString("SmallCategory")
+        ));
     }
 }
