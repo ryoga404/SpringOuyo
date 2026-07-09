@@ -30,6 +30,8 @@ public class SecurityConfig {
                 // ⭕ /register を追加して、未ログインでもユーザー登録画面を開けるようにします
             		// SecurityConfig.java 内の該当箇所
             		.requestMatchers("/login", "/register", "/", "/home", "/products", "/css/**", "/js/**").permitAll()
+                // ⭕ 管理者機能は ROLE_ADMIN のユーザーのみアクセス可能（URL直打ち対策）
+                .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

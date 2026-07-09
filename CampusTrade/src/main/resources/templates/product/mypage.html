@@ -15,9 +15,14 @@
         .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .section-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; border-left: 4px solid var(--primary); padding-left: 0.5rem; }
         .item-list { list-style: none; padding: 0; margin: 0; }
-        .item-row { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
         .item-row a { color: var(--primary); text-decoration: none; font-weight: 600; }
         .price { color: var(--danger); font-weight: 700; }
+        .badge { font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 6px; }
+        .OPEN { background: #e0f2fe; color: #0369a1; }
+        .LOCKED { background: #fef3c7; color: #b45309; }
+        .CLOSED { background: #f1f5f9; color: #475569; }
+        .禁止 { background: #fee2e2; color: #b91c1c; }
     </style>
 </head>
 <body>
@@ -31,31 +36,31 @@
             <a href="/products" style="color: var(--text-muted); text-decoration: none; font-weight: 600;">← 商品一覧に戻る</a>
             <a href="/products/nickname" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.9rem;">✏️ ニックネームを変更する</a>
         </div>
-        
+
         <div class="card" style="background: linear-gradient(135deg, #eff6ff 0%, #dbedff 100%); border: none;">
-            <h1 style="margin: 0; font-size: 1.5rem;">👤 <span th:text="${user.nickname}">ユーザー名</span> のマイページ</h1>
-            <p style="margin: 0.25rem 0 0 0; color: var(--text-muted); font-size: 0.9rem;">学生番号 / ログインID: <span th:text="${user.userId}">ID</span></p>
+            <h1 style="margin: 0; font-size: 1.5rem;">👤 <span th:text="${currentUser.nickname}">ユーザー名</span> のマイページ</h1>
+            <p style="margin: 0.25rem 0 0 0; color: var(--text-muted); font-size: 0.9rem;">ログインID: <span th:text="${currentUser.email}">email</span></p>
         </div>
 
         <div class="card" id="fav-section">
             <h2 class="section-title">⭐ お気に入り中のアイテム</h2>
             <ul class="item-list">
-                <li th:each="product : ${user.favoriteProducts}" class="item-row">
+                <li th:each="product : ${myFavorites}" class="item-row">
                     <a th:href="@{/products/{id}(id=${product.id})}" th:text="${product.productName}">商品名</a>
                     <span class="price" th:text="${product.price} + '円'">0円</span>
                 </li>
-                <li th:if="${#lists.isEmpty(user.favoriteProducts)}" style="color: var(--text-muted); font-style: italic;">お気に入り登録された商品はありません。</li>
+                <li th:if="${#lists.isEmpty(myFavorites)}" style="color: var(--text-muted); font-style: italic; padding: 0.5rem 0;">お気に入り登録された商品はありません。</li>
             </ul>
         </div>
 
         <div class="card">
-            <h2 class="section-title">🎒 自分の出品した商品</h2>
+            <h2 class="section-title">🎒 出品履歴</h2>
             <ul class="item-list">
                 <li th:each="product : ${myProducts}" class="item-row">
                     <a th:href="@{/products/{id}(id=${product.id})}" th:text="${product.productName}">商品名</a>
-                    <span style="font-weight: 600;" th:text="${product.status}">STATUS</span>
+                    <span class="badge" th:classappend="${product.status}" th:text="${product.status}">STATUS</span>
                 </li>
-                <li th:if="${#lists.isEmpty(myProducts)}" style="color: var(--text-muted); font-style: italic;">出品した商品はありません。</li>
+                <li th:if="${#lists.isEmpty(myProducts)}" style="color: var(--text-muted); font-style: italic; padding: 0.5rem 0;">出品した商品はありません。</li>
             </ul>
         </div>
 
@@ -66,7 +71,18 @@
                     <a th:href="@{/products/{id}(id=${product.id})}" th:text="${product.productName}">商品名</a>
                     <span class="price" th:text="${product.price} + '円'">0円</span>
                 </li>
-                <li th:if="${#lists.isEmpty(myNegotiations)}" style="color: var(--text-muted); font-style: italic;">現在進行中の交渉はありません。</li>
+                <li th:if="${#lists.isEmpty(myNegotiations)}" style="color: var(--text-muted); font-style: italic; padding: 0.5rem 0;">現在進行中の交渉はありません。</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">📦 購入履歴（取引完了）</h2>
+            <ul class="item-list">
+                <li th:each="product : ${myPurchases}" class="item-row">
+                    <a th:href="@{/products/{id}(id=${product.id})}" th:text="${product.productName}">商品名</a>
+                    <span class="price" th:text="${product.price} + '円'">0円</span>
+                </li>
+                <li th:if="${#lists.isEmpty(myPurchases)}" style="color: var(--text-muted); font-style: italic; padding: 0.5rem 0;">購入が完了した商品はありません。</li>
             </ul>
         </div>
     </div>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>商品出品 - CampusTrade</title>
+    <title th:text="${isEdit} ? '商品編集 - CampusTrade' : '商品出品 - CampusTrade'">商品出品 - CampusTrade</title>
     <style>
         :root {
             --primary: #2563eb; --primary-dark: #1d4ed8; --bg: #f8fafc;
@@ -20,6 +20,8 @@
         .form-label { display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.95rem; }
         .form-control { width: 100%; box-sizing: border-box; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; outline: none; transition: border 0.2s; }
         .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .cat-row { display: flex; gap: 0.5rem; }
+        .cat-row select { flex: 1; }
         .btn { width: 100%; padding: 0.75rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-size: 1rem; transition: background 0.2s; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover { background: var(--primary-dark); }
@@ -36,37 +38,135 @@
         <a href="/products" class="back-link">← 一覧に戻る</a>
 
         <div class="card">
-            <h1 style="margin: 0 0 1.5rem 0; font-weight: 800; font-size: 1.5rem;">🎒 新しい商品を出品</h1>
+            <h1 style="margin: 0 0 1.5rem 0; font-weight: 800; font-size: 1.5rem;" th:text="${isEdit} ? '✏️ 商品情報を編集' : '🎒 新しい商品を出品'">出品</h1>
 
-            <div th:if="${param.error}" class="alert-danger">
-                ⚠️ 金額が大きすぎるか不正です。9,999,999円以下で入力してください。
-            </div>
+            <div th:if="${errorMessage}" class="alert-danger" th:text="${errorMessage}">エラー</div>
 
-            <form th:action="@{/products/save}" method="post">
+            <form th:action="${isEdit} ? @{/products/{id}/edit(id=${product.id})} : @{/products/save}" method="post">
                 <div class="form-group">
                     <label class="form-label">商品名</label>
-                    <input type="text" name="productName" class="form-control" placeholder="例: 応用情報技術者の教科書" required>
+                    <input type="text" name="productName" class="form-control" th:value="${product.productName}" placeholder="例: 応用情報技術者の教科書" maxlength="255" required>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">カテゴリ</label>
-                    <input type="text" name="category" class="form-control" placeholder="例: 教科書、家具、家電" required>
+                    <label class="form-label">カテゴリ（大 → 中 → 小）</label>
+                    <div class="cat-row">
+                        <select id="bigCategory" class="form-control">
+                            <option value="">-- 大分類 --</option>
+                        </select>
+                        <select id="midCategory" class="form-control" disabled>
+                            <option value="">-- 中分類 --</option>
+                        </select>
+                        <select id="smallCategorySelect" class="form-control" disabled>
+                            <option value="">-- 小分類 --</option>
+                        </select>
+                    </div>
+                    <input type="hidden" name="categoryId" id="finalCategoryId" th:value="${product.categoryId}" required>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">希望価格 (円)</label>
-                    <input type="number" name="price" class="form-control" max="9999999" placeholder="金額（最大 9,999,999円）" required>
+                    <input type="number" name="price" class="form-control" min="0" max="9999999" th:value="${product.price}" placeholder="金額（0〜9,999,999円）" required>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">商品説明</label>
-                    <textarea name="description" class="form-control" rows="5" placeholder="商品の状態や、受け渡し可能な場所（例: 〇〇キャンパス食堂前）などを記入してください。" required></textarea>
+                    <textarea name="description" class="form-control" rows="5" placeholder="商品の状態や、受け渡し可能な場所（例: 〇〇キャンパス食堂前）などを記入してください。" required th:text="${product.description}"></textarea>
                 </div>
 
-                <button type="submit" class="btn btn-primary">🚀 この内容で出品する</button>
+                <button type="submit" class="btn btn-primary" th:text="${isEdit} ? '💾 この内容で更新する' : '🚀 この内容で出品する'">出品する</button>
             </form>
         </div>
     </div>
 
+    <!-- 💡 商品一覧画面と同じ大中小連動ロジック。編集時は product.categoryId から選択状態を復元する -->
+    <script th:inline="javascript">
+        const categoryData = /*[[${categories}]]*/ [];
+        const initialCategoryId = /*[[${product.categoryId}]]*/ null;
+
+        const bigSelect = document.getElementById('bigCategory');
+        const midSelect = document.getElementById('midCategory');
+        const smallSelect = document.getElementById('smallCategorySelect');
+        const finalInput = document.getElementById('finalCategoryId');
+
+        const bigCategories = [...new Set(categoryData.map(c => c.bigCategory))];
+        bigCategories.forEach(big => {
+            if (big) {
+                const opt = document.createElement('option');
+                opt.value = big; opt.textContent = big;
+                bigSelect.appendChild(opt);
+            }
+        });
+
+        bigSelect.addEventListener('change', function () {
+            midSelect.innerHTML = '<option value="">-- 中分類 --</option>';
+            smallSelect.innerHTML = '<option value="">-- 小分類 --</option>';
+            midSelect.disabled = true; smallSelect.disabled = true;
+            finalInput.value = "";
+            if (!this.value) return;
+
+            const filtered = categoryData.filter(c => c.bigCategory === this.value);
+            const midCategories = [...new Set(filtered.map(c => c.midCategory))];
+            midCategories.forEach(mid => {
+                if (mid) {
+                    const opt = document.createElement('option');
+                    opt.value = mid; opt.textContent = mid;
+                    midSelect.appendChild(opt);
+                }
+            });
+            midSelect.disabled = false;
+
+            // 中分類が無い（NULL）カテゴリの場合は、大分類選択時点でそのIDを確定させる
+            const noMid = filtered.find(c => !c.midCategory);
+            if (noMid) finalInput.value = noMid.id;
+        });
+
+        midSelect.addEventListener('change', function () {
+            smallSelect.innerHTML = '<option value="">-- 小分類 --</option>';
+            smallSelect.disabled = true;
+            finalInput.value = "";
+            if (!this.value) return;
+
+            const filtered = categoryData.filter(c => c.bigCategory === bigSelect.value && c.midCategory === this.value);
+            if (filtered.length > 0) finalInput.value = filtered[0].id;
+
+            let hasSmall = false;
+            filtered.forEach(c => {
+                if (c.smallCategory) {
+                    const opt = document.createElement('option');
+                    opt.value = c.id; opt.textContent = c.smallCategory;
+                    smallSelect.appendChild(opt);
+                    hasSmall = true;
+                }
+            });
+            if (hasSmall) smallSelect.disabled = false;
+        });
+
+        smallSelect.addEventListener('change', function () {
+            if (this.value) {
+                finalInput.value = this.value;
+            } else {
+                const filtered = categoryData.filter(c => c.bigCategory === bigSelect.value && c.midCategory === midSelect.value);
+                if (filtered.length > 0) finalInput.value = filtered[0].id;
+            }
+        });
+
+        // 編集時：既存のカテゴリIDから大・中・小の選択状態を復元
+        if (initialCategoryId) {
+            const selected = categoryData.find(c => c.id === initialCategoryId);
+            if (selected) {
+                bigSelect.value = selected.bigCategory;
+                bigSelect.dispatchEvent(new Event('change'));
+                if (selected.midCategory) {
+                    midSelect.value = selected.midCategory;
+                    midSelect.dispatchEvent(new Event('change'));
+                }
+                if (selected.smallCategory) {
+                    smallSelect.value = selected.id;
+                }
+                finalInput.value = initialCategoryId;
+            }
+        }
+    </script>
 </body>
 </html>

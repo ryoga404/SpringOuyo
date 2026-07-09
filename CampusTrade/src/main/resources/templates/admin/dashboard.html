@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理者ダッシュボード - CampusTrade</title>
+    <style>
+        :root {
+            --primary: #2563eb; --bg: #f8fafc; --surface: #ffffff; --text: #0f172a;
+            --text-muted: #64748b; --border: #e2e8f0; --danger: #ef4444;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
+        .navbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display:flex; justify-content:space-between; align-items:center; }
+        .logo { font-size: 1.5rem; font-weight: 800; color: var(--primary); text-decoration: none; }
+        .container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+        table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        th { background: #f1f5f9; font-weight: 700; color: var(--text-muted); }
+        .badge { font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 6px; }
+        .OPEN { background: #e0f2fe; color: #0369a1; }
+        .LOCKED { background: #fef3c7; color: #b45309; }
+        .CLOSED { background: #f1f5f9; color: #475569; }
+        .禁止 { background: #fee2e2; color: #b91c1c; }
+        .btn-ban { padding: 0.35rem 0.8rem; border-radius: 6px; border: 1px solid #fca5a5; background: #fff; color: var(--danger); font-weight: 700; font-size: 0.8rem; cursor: pointer; }
+        .btn-ban:hover { background: #fee2e2; }
+        .btn-ban:disabled { opacity: 0.4; cursor: not-allowed; }
+        a.product-link { color: var(--primary); text-decoration: none; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="/products" class="logo">🏫 CampusTrade</a>
+        <span style="font-weight:700; color: var(--text-muted);">🛡️ 管理者ダッシュボード</span>
+    </nav>
+
+    <div class="container">
+        <h1 style="font-weight:800;">商品一覧（全ステータス）</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>商品名</th>
+                    <th>カテゴリ</th>
+                    <th>価格</th>
+                    <th>出品者</th>
+                    <th>ステータス</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="product : ${products}">
+                    <td th:text="${product.id}">1</td>
+                    <td><a class="product-link" th:href="@{/products/{id}(id=${product.id})}" th:text="${product.productName}">商品名</a></td>
+                    <td th:text="${product.category}">カテゴリ</td>
+                    <td th:text="${product.price} + '円'">0円</td>
+                    <td th:text="${product.seller.nickname}">出品者</td>
+                    <td><span class="badge" th:classappend="${product.status}" th:text="${product.status}">OPEN</span></td>
+                    <td>
+                        <form th:action="@{/admin/products/{id}/ban(id=${product.id})}" method="post" style="margin:0;" onsubmit="return confirm('この商品を「禁止」ステータスにして非表示にします。よろしいですか？');">
+                            <button type="submit" class="btn-ban" th:disabled="${product.status == '禁止'}">🚫 禁止にする</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(products)}">
+                    <td colspan="7" style="text-align:center; color: var(--text-muted); font-style: italic;">商品がありません。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

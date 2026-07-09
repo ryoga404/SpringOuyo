@@ -43,3 +43,8 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+// ⭕ @PathVariable / @RequestParam で引数名を省略してもリフレクションで解決できるようにする
+tasks.withType(JavaCompile).configureEach {
+	options.compilerArgs << '-parameters'
+}

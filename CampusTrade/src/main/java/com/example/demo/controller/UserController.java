@@ -33,23 +33,25 @@ public class UserController {
     // ユーザー登録の実行処理
     @PostMapping("/register")
     public String registerUser(
+            @RequestParam("username") String username,
             @RequestParam("email") String email,
             @RequestParam("password") String password,
             Model model) {
-        
+
         try {
             // 新しいユーザーオブジェクトを作成
             User user = new User();
             user.setEmail(email);
             user.setPassword(password); // 生パスワード（Service側で暗号化されます）
+            user.setNickname(username); // 登録画面の「ユーザー名」を初期ニックネームとして保存
             user.setRole("USER");       // 一般ユーザー権限を付与
 
-            // ⭕ 修正: サービス層の登録処理を呼び出す
+            // ⭕ サービス層の登録処理を呼び出す
             userService.registerUser(user);
 
             // 登録成功後はログイン画面へ
             return "redirect:/login";
-            
+
         } catch (Exception e) {
             e.printStackTrace();
             model.addAttribute("error", "登録に失敗しました。入力内容を確認するか、別のメールアドレスをお試しください。");

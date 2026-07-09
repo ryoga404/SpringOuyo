@@ -4,23 +4,17 @@ public class User {
     private Long id;
     private String email;
     private String password;
+    private String nickname;
     private String role;
 
     public User() {}
 
-    public User(Long id, String email, String password, String role) {
+    public User(Long id, String email, String password, String nickname, String role) {
         this.id = id;
         this.email = email;
         this.password = password;
+        this.nickname = nickname;
         this.role = role;
-    }
-
-    // 💡 HTMLエラー防止用：nicknameの代わりにemailの＠より前を返す
-    public String getNickname() {
-        if (this.email != null && this.email.contains("@")) {
-            return this.email.split("@")[0];
-        }
-        return this.email;
     }
 
     public Long getId() { return id; }
@@ -34,4 +28,16 @@ public class User {
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+
+    // 💡 nicknameが未設定(NULL)の場合はemailの＠より前を仮の表示名として返す
+    public String getNickname() {
+        if (this.nickname != null && !this.nickname.trim().isEmpty()) {
+            return this.nickname;
+        }
+        if (this.email != null && this.email.contains("@")) {
+            return this.email.split("@")[0];
+        }
+        return this.email;
+    }
+    public void setNickname(String nickname) { this.nickname = nickname; }
 }

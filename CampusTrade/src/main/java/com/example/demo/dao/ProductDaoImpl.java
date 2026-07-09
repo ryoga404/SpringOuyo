@@ -1,10 +1,14 @@
 package com.example.demo.dao;
 
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import com.example.demo.model.Category;
@@ -31,7 +35,7 @@ public class ProductDaoImpl implements ProductDao {
                 rs.getLong("seller_id"),
                 rs.getObject("buyer_id") != null ? rs.getLong("buyer_id") : null
         );
-        
+
         // 大分類・中分類・小分類を結合したものを仮のカテゴリ文字列として設定
         String big = rs.getString("BigCategory");
         String mid = rs.getString("MidCategory");
@@ -41,38 +45,35 @@ public class ProductDaoImpl implements ProductDao {
         if (mid != null) catBuilder.append(" > ").append(mid);
         if (small != null) catBuilder.append(" > ").append(small);
         product.setCategory(catBuilder.toString().isEmpty() ? "未分類" : catBuilder.toString());
-        
+
         User seller = new User();
-        seller.setEmail(rs.getString("seller_email")); 
+        seller.setId(rs.getLong("seller_id"));
+        seller.setEmail(rs.getString("seller_email"));
+        seller.setNickname(rs.getString("seller_nickname"));
         product.setSeller(seller);
-        
+
         return product;
     };
 
-    // 💡 既存の findAll メソッドを検索対応に拡張
+    private static final String BASE_SELECT =
+            "SELECT p.*, c.BigCategory, c.MidCategory, c.SmallCategory, " +
+            "u.email AS seller_email, u.nickname AS seller_nickname " +
+            "FROM products p " +
+            "LEFT JOIN category c ON p.category_id = c.id " +
+            "LEFT JOIN users u ON p.seller_id = u.id ";
+
     @Override
     public List<Product> findAll() {
-        // 条件なしの全件検索（初期表示用など）
         return findByConditions(null, null, null, null, null, null);
     }
 
-    // 💡 動的検索を行うための新しいメソッド
-    // keyword: 商品名・説明のキーワード検索
-    // tagCategory: 人気タグ用。大・中・小分類のいずれかに一致するものを検索
-    // categoryId: 3連選択ボックス（大→中→小）で確定したカテゴリID
     @Override
     public List<Product> findByConditions(String keyword, String tagCategory, Integer categoryId, String price, String delivery, String sort) {
-        StringBuilder sql = new StringBuilder(
-            "SELECT p.*, c.BigCategory, c.MidCategory, c.SmallCategory, u.email AS seller_email " +
-            "FROM products p " +
-            "LEFT JOIN category c ON p.category_id = c.id " +
-            "LEFT JOIN users u ON p.seller_id = u.id " +
-            "WHERE 1=1 "
-        );
+        // 要件定義書 3.2：一覧には「販売中（OPEN）」の商品のみを表示する
+        StringBuilder sql = new StringBuilder(BASE_SELECT).append("WHERE p.status = 'OPEN' ");
 
         List<Object> params = new ArrayList<>();
 
-        // 1. キーワード検索 (商品名または商品説明に含む)
         if (keyword != null && !keyword.trim().isEmpty()) {
             sql.append("AND (p.product_name LIKE ? OR p.description LIKE ?) ");
             String likeParam = "%" + keyword.trim() + "%";
@@ -80,7 +81,6 @@ public class ProductDaoImpl implements ProductDao {
             params.add(likeParam);
         }
 
-        // 2. 人気タグからのカテゴリ検索（大・中・小分類のいずれかに一致すればヒット）
         if (tagCategory != null && !tagCategory.trim().isEmpty()) {
             sql.append("AND (c.BigCategory = ? OR c.MidCategory = ? OR c.SmallCategory = ?) ");
             params.add(tagCategory.trim());
@@ -88,13 +88,11 @@ public class ProductDaoImpl implements ProductDao {
             params.add(tagCategory.trim());
         }
 
-        // 2-2. 3連選択ボックスで確定したカテゴリIDによる絞り込み
         if (categoryId != null) {
             sql.append("AND c.id = ? ");
             params.add(categoryId);
         }
 
-        // 3. 価格帯抽出 (～1000円、～3000円、～5000円)
         if (price != null && !price.trim().isEmpty()) {
             try {
                 int maxPrice = Integer.parseInt(price);
@@ -105,8 +103,6 @@ public class ProductDaoImpl implements ProductDao {
             }
         }
 
-        // 4. 受渡方法 (現状のproductsテーブルにカラムがない場合は適宜スキップ、または拡張用)
-        // ※ 画面の仕様上、今回は description等に部分一致させるか、カラム追加まで一旦条件分岐のみ用意
         if (delivery != null && !delivery.trim().isEmpty()) {
             if ("hand".equals(delivery)) {
                 sql.append("AND p.description LIKE ? ");
@@ -117,7 +113,6 @@ public class ProductDaoImpl implements ProductDao {
             }
         }
 
-        // 5. 並び替え (新着順、価格が安い順、高い順)
         if (sort != null && !sort.trim().isEmpty()) {
             if ("new".equals(sort)) {
                 sql.append("ORDER BY p.id DESC ");
@@ -127,14 +122,12 @@ public class ProductDaoImpl implements ProductDao {
                 sql.append("ORDER BY p.price DESC ");
             }
         } else {
-            // デフォルトはIDの降順（新着順）
             sql.append("ORDER BY p.id DESC ");
         }
 
         return jdbcTemplate.query(sql.toString(), productRowMapper, params.toArray());
     }
 
-    // 💡 大・中・小の3連選択ボックスをJS側で構築するための元データ一覧を取得
     @Override
     public List<Category> findAllCategories() {
         String sql = "SELECT id, BigCategory, MidCategory, SmallCategory FROM category ORDER BY id";
@@ -144,5 +137,85 @@ public class ProductDaoImpl implements ProductDao {
                 rs.getString("MidCategory"),
                 rs.getString("SmallCategory")
         ));
+    }
+
+    @Override
+    public Product findById(Long id) {
+        String sql = BASE_SELECT + "WHERE p.id = ?";
+        List<Product> results = jdbcTemplate.query(sql, productRowMapper, id);
+        return results.isEmpty() ? null : results.get(0);
+    }
+
+    @Override
+    public void updateStatus(Long id, String status, Long buyerId) {
+        String sql = "UPDATE products SET status = ?, buyer_id = ? WHERE id = ?";
+        jdbcTemplate.update(sql, status, buyerId, id);
+    }
+
+    // ⭕ 商品出品：新規登録
+    @Override
+    public Long save(Product product) {
+        String sql = "INSERT INTO products (product_name, description, price, category_id, status, seller_id, buyer_id) " +
+                "VALUES (?, ?, ?, ?, 'OPEN', ?, NULL)";
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, product.getProductName());
+            ps.setString(2, product.getDescription());
+            ps.setInt(3, product.getPrice());
+            ps.setInt(4, product.getCategoryId());
+            ps.setLong(5, product.getSellerId());
+            return ps;
+        }, keyHolder);
+        Number key = keyHolder.getKey();
+        return key != null ? key.longValue() : null;
+    }
+
+    // ⭕ 商品編集：出品者本人の商品情報を更新（ステータス・出品者・購入者は変更しない）
+    @Override
+    public void update(Product product) {
+        String sql = "UPDATE products SET product_name = ?, description = ?, price = ?, category_id = ? " +
+                "WHERE id = ? AND seller_id = ?";
+        jdbcTemplate.update(sql,
+                product.getProductName(), product.getDescription(), product.getPrice(), product.getCategoryId(),
+                product.getId(), product.getSellerId());
+    }
+
+    // ⭕ 商品削除：外部キー制約があるため、紐づく messages / user_favorite を先に削除する
+    @Override
+    public void delete(Long id) {
+        jdbcTemplate.update("DELETE FROM messages WHERE product_id = ?", id);
+        jdbcTemplate.update("DELETE FROM user_favorite WHERE product_id = ?", id);
+        jdbcTemplate.update("DELETE FROM products WHERE id = ?", id);
+    }
+
+    @Override
+    public List<Product> findBySellerId(Long sellerId) {
+        String sql = BASE_SELECT + "WHERE p.seller_id = ? ORDER BY p.id DESC";
+        return jdbcTemplate.query(sql, productRowMapper, sellerId);
+    }
+
+    @Override
+    public List<Product> findPurchaseHistory(Long buyerId) {
+        String sql = BASE_SELECT + "WHERE p.buyer_id = ? AND p.status = 'CLOSED' ORDER BY p.id DESC";
+        return jdbcTemplate.query(sql, productRowMapper, buyerId);
+    }
+
+    @Override
+    public List<Product> findNegotiations(Long userId) {
+        String sql = BASE_SELECT + "WHERE p.status = 'LOCKED' AND (p.seller_id = ? OR p.buyer_id = ?) ORDER BY p.id DESC";
+        return jdbcTemplate.query(sql, productRowMapper, userId, userId);
+    }
+
+    @Override
+    public List<Product> findAllForAdmin() {
+        String sql = BASE_SELECT + "ORDER BY p.id DESC";
+        return jdbcTemplate.query(sql, productRowMapper);
+    }
+
+    @Override
+    public void banProduct(Long id) {
+        String sql = "UPDATE products SET status = '禁止' WHERE id = ?";
+        jdbcTemplate.update(sql, id);
     }
 }

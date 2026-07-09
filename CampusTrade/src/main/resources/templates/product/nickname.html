@@ -38,8 +38,8 @@
             
             <form th:action="@{/products/nickname/update}" method="post">
                 <div class="form-group">
-                    <label class="form-label">現在の設定: <span style="color: var(--primary);" th:text="${user.nickname}">ニックネーム</span></label>
-                    <input type="text" name="nickname" class="form-control" th:value="${user.nickname}" placeholder="新しいニックネームを入力" required>
+                    <label class="form-label">現在の設定: <span style="color: var(--primary);" th:text="${currentUser.nickname}">ニックネーム</span></label>
+                    <input type="text" name="nickname" class="form-control" th:value="${currentUser.nickname}" placeholder="新しいニックネームを入力" maxlength="255" required>
                 </div>
 
                 <button type="submit" class="btn btn-primary">🔄 ニックネームを更新する</button>

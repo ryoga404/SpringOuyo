@@ -22,12 +22,13 @@ public class UserDaoImpl implements UserDao {
             rs.getLong("id"),
             rs.getString("email"),
             rs.getString("password"),
+            rs.getString("nickname"),
             rs.getString("role")
     );
 
     @Override
     public Optional<User> findByEmail(String email) {
-        String sql = "SELECT id, email, password, role FROM users WHERE email = ?";
+        String sql = "SELECT id, email, password, nickname, role FROM users WHERE email = ?";
         try {
             User user = jdbcTemplate.queryForObject(sql, userRowMapper, email);
             return Optional.ofNullable(user);
@@ -36,10 +37,28 @@ public class UserDaoImpl implements UserDao {
         }
     }
 
-    // ⭕ INSERT文を実行してDBにユーザーを保存する処理を実装
+    @Override
+    public Optional<User> findById(Long id) {
+        String sql = "SELECT id, email, password, nickname, role FROM users WHERE id = ?";
+        try {
+            User user = jdbcTemplate.queryForObject(sql, userRowMapper, id);
+            return Optional.ofNullable(user);
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
+
+    // ⭕ INSERT文を実行してDBにユーザーを保存する処理
     @Override
     public void save(User user) {
-        String sql = "INSERT INTO users (email, password, role) VALUES (?, ?, ?)";
-        jdbcTemplate.update(sql, user.getEmail(), user.getPassword(), user.getRole());
+        String sql = "INSERT INTO users (email, password, nickname, role) VALUES (?, ?, ?, ?)";
+        jdbcTemplate.update(sql, user.getEmail(), user.getPassword(), user.getNickname(), user.getRole());
+    }
+
+    // ⭕ ニックネームのみ更新
+    @Override
+    public void updateNickname(Long userId, String nickname) {
+        String sql = "UPDATE users SET nickname = ? WHERE id = ?";
+        jdbcTemplate.update(sql, nickname, userId);
     }
 }

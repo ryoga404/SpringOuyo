@@ -23,13 +23,19 @@ public class UserService {
         return userDao.findByEmail(email);
     }
 
-    // ⭕ パスワードをハッシュ化してデータベースに保存するメソッドを追加
+    public Optional<User> getUserById(Long id) {
+        return userDao.findById(id);
+    }
+
+    // ⭕ パスワードをハッシュ化してデータベースに保存する
     public void registerUser(User user) {
-        // パスワードを暗号化（BCryptハッシュ化）
         String encodedPassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(encodedPassword);
-        
-        // DAOを呼び出して保存
         userDao.save(user);
+    }
+
+    // ⭕ ニックネームの変更（プロフィール編集機能）
+    public void updateNickname(Long userId, String nickname) {
+        userDao.updateNickname(userId, nickname);
     }
 }

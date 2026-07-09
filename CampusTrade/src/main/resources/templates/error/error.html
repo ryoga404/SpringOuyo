@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>エラーが発生しました</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; color: #0f172a; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }
+        .box { text-align:center; }
+        h1 { font-size: 3rem; margin: 0; color: #ef4444; }
+        p { color: #64748b; font-size:1.1rem; }
+        a { color:#2563eb; font-weight:700; text-decoration:none; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>エラーが発生しました</h1>
+        <p th:text="${status} + ': ' + ${error}">エラー内容</p>
+        <a href="/products">← 商品一覧に戻る</a>
+    </div>
+</body>
+</html>

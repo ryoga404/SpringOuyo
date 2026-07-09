@@ -87,6 +87,7 @@
                 <a href="/products/mypage">📂 マイページ</a>
                 <a href="/products/mypage#fav-section">⭐ お気に入り一覧</a>
                 <a href="/products/nickname">✏️ ニックネーム変更</a>
+                <a sec:authorize="hasRole('ADMIN')" href="/admin/dashboard">🛡️ 管理者ダッシュボード</a>
                 <hr style="border: none; border-top: 1px solid var(--border); margin: 0;">
                 <form th:action="@{/logout}" method="post" style="margin: 0;">
                     <button type="submit" class="logout-btn">🚪 ログアウト</button>
