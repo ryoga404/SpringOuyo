@@ -2,6 +2,7 @@ package com.example.demo.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -29,7 +30,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // ⭕ /register を追加して、未ログインでもユーザー登録画面を開けるようにします
             		// SecurityConfig.java 内の該当箇所
-            		.requestMatchers("/login", "/register", "/", "/home", "/products", "/css/**", "/js/**").permitAll()
+            		.requestMatchers("/login", "/register", "/", "/home", "/products", "/css/**", "/js/**", "/images/**").permitAll()
+                // ⭕ 商品一覧・詳細は未ログインでも閲覧できる（購入・出品・コメントは別途認証必須）
+                .requestMatchers(HttpMethod.GET, "/products/{id:[0-9]+}").permitAll()
                 // ⭕ 管理者機能は ROLE_ADMIN のユーザーのみアクセス可能（URL直打ち対策）
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
