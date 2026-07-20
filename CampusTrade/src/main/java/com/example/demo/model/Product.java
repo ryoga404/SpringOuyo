@@ -21,6 +21,16 @@ public class Product {
     // ⭕ 商品画像の有無（DBカラムではなく、画像ファイルの存在チェック結果を保持する一時的な項目）
     private boolean hasImage;
 
+    // ⭕ 商品詳細ページの閲覧数（人気順ソート・検索強化用）
+    private int viewCount;
+
+    // ⭕ 複数画像対応：実際に存在する画像のURL一覧（一時的な項目、DBカラムではない）
+    private java.util.List<String> imageUrls = new java.util.ArrayList<>();
+
+    // ⭕ レビュー機能：この商品の取引についた平均評価・件数（一時的な項目）
+    private Double averageRating;
+    private int reviewCount;
+
     public Product() {}
 
     public Product(Long id, String productName, String description, Integer price, 
@@ -74,4 +84,16 @@ public class Product {
 
     public boolean isHasImage() { return hasImage; }
     public void setHasImage(boolean hasImage) { this.hasImage = hasImage; }
+
+    public int getViewCount() { return viewCount; }
+    public void setViewCount(int viewCount) { this.viewCount = viewCount; }
+
+    public java.util.List<String> getImageUrls() { return imageUrls; }
+    public void setImageUrls(java.util.List<String> imageUrls) { this.imageUrls = imageUrls; }
+
+    public Double getAverageRating() { return averageRating; }
+    public void setAverageRating(Double averageRating) { this.averageRating = averageRating; }
+
+    public int getReviewCount() { return reviewCount; }
+    public void setReviewCount(int reviewCount) { this.reviewCount = reviewCount; }
 }

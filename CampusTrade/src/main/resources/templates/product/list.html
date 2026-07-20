@@ -82,6 +82,10 @@
         <a href="/products" class="logo">🏫 CampusTrade</a>
         
         <div class="dropdown">
+            <a th:if="${loginUser != null}" href="/notifications" class="bell" style="position:relative; text-decoration:none; color:var(--text); font-size:1.3rem; margin-right: 1rem;">
+                🔔
+                <span th:if="${unreadNotificationCount > 0}" style="position:absolute; top:-6px; right:-10px; background:var(--danger); color:#fff; font-size:0.65rem; font-weight:800; border-radius:10px; padding:1px 5px;" th:text="${unreadNotificationCount}">1</span>
+            </a>
             <div class="user-name-btn">
                 👤 <span th:text="${loginUser != null ? loginUser.nickname : 'ゲスト'}">ゲスト</span> さん
             </div>
@@ -89,6 +93,7 @@
                 <th:block th:if="${loginUser != null}">
                     <a href="/products/mypage">📂 マイページ</a>
                     <a href="/products/mypage#fav-section">⭐ お気に入り一覧</a>
+                    <a href="/notifications">🔔 通知一覧</a>
                     <a href="/products/nickname">✏️ ニックネーム変更</a>
                     <a sec:authorize="hasRole('ADMIN')" href="/admin/dashboard">🛡️ 管理者ダッシュボード</a>
                     <hr style="border: none; border-top: 1px solid var(--border); margin: 0;">
@@ -131,6 +136,13 @@
                     </select>
                     <!-- 実際にサーバーへ送信されるカテゴリID用の隠しパラメータ -->
                     <input type="hidden" name="categoryId" id="finalCategoryId">
+                    <!-- ⭕ 12. 検索強化：並び順（新着・価格順・人気順） -->
+                    <select name="sort" class="select-control" style="flex:0.6;" onchange="this.form.submit()">
+                        <option value="">-- 並び順：新着順 --</option>
+                        <option value="priceAsc" th:selected="${selectedSort == 'priceAsc'}">価格の安い順</option>
+                        <option value="priceDesc" th:selected="${selectedSort == 'priceDesc'}">価格の高い順</option>
+                        <option value="popular" th:selected="${selectedSort == 'popular'}">人気順（閲覧数）</option>
+                    </select>
                 </div>
             </form>
             
@@ -146,7 +158,7 @@
 
         <div class="grid">
             <a th:each="product : ${products}" th:href="@{/products/{id}(id=${product.id})}" class="card">
-                <img th:if="${product.hasImage}" th:src="@{'/images/products/' + ${product.id} + '.jpg'}" class="card-thumb" alt="商品画像">
+                <img th:if="${product.hasImage}" th:src="@{'/images/products/' + ${product.id} + '_1.jpg'}" class="card-thumb" alt="商品画像">
                 <div th:unless="${product.hasImage}" class="card-thumb-placeholder">🖼️</div>
                 <div class="card-body">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.25rem;">

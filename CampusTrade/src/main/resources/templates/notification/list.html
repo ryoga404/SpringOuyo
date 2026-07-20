@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通知一覧 - CampusTrade</title>
+    <style>
+        :root { --primary: #2563eb; --bg: #f8fafc; --surface: #ffffff; --text: #0f172a; --text-muted: #64748b; --border: #e2e8f0; --danger: #ef4444; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
+        .navbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; }
+        .container { max-width: 700px; margin: 2rem auto; padding: 0 1rem; }
+        .back-link { display: inline-flex; color: var(--text-muted); text-decoration: none; font-weight: 600; margin-bottom: 1rem; }
+        .notif { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 0.75rem; display:flex; justify-content:space-between; align-items:center; gap: 1rem; }
+        .notif a { color: var(--text); text-decoration: none; flex: 1; }
+        .notif a:hover { color: var(--primary); }
+        .type-tag { font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 6px; background: #eff6ff; color: var(--primary); white-space: nowrap; }
+        .type-tag.PRICE_DROP { background: #fee2e2; color: #b91c1c; }
+        .type-tag.OFFER { background: #fef3c7; color: #b45309; }
+        .type-tag.MESSAGE { background: #dcfce7; color: #166534; }
+        .time { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="/products" style="font-size: 1.5rem; font-weight: 800; color: var(--primary); text-decoration: none;">🏫 CampusTrade</a>
+    </nav>
+
+    <div class="container">
+        <a href="/products" class="back-link">← 商品一覧に戻る</a>
+        <h1 style="font-weight: 800;">🔔 通知一覧</h1>
+
+        <div th:each="n : ${notifications}" class="notif">
+            <span class="type-tag" th:classappend="${n.type}" th:text="${n.type}">TYPE</span>
+            <a th:href="${n.link != null ? n.link : '/products'}" th:text="${n.content}">通知内容</a>
+            <span class="time" th:text="${#temporals.format(n.createdAt, 'MM/dd HH:mm')}">日時</span>
+        </div>
+        <p th:if="${#lists.isEmpty(notifications)}" style="color: var(--text-muted); font-style: italic; text-align:center; margin-top: 2rem;">通知はありません。</p>
+    </div>
+
+</body>
+</html>

@@ -18,17 +18,21 @@ public class UserDaoImpl implements UserDao {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    private final RowMapper<User> userRowMapper = (rs, rowNum) -> new User(
-            rs.getLong("id"),
-            rs.getString("email"),
-            rs.getString("password"),
-            rs.getString("nickname"),
-            rs.getString("role")
-    );
+    private final RowMapper<User> userRowMapper = (rs, rowNum) -> {
+        User user = new User(
+                rs.getLong("id"),
+                rs.getString("email"),
+                rs.getString("password"),
+                rs.getString("nickname"),
+                rs.getString("role")
+        );
+        user.setDeleted(rs.getTimestamp("deleted_at") != null);
+        return user;
+    };
 
     @Override
     public Optional<User> findByEmail(String email) {
-        String sql = "SELECT id, email, password, nickname, role FROM users WHERE email = ?";
+        String sql = "SELECT id, email, password, nickname, role, deleted_at FROM users WHERE email = ?";
         try {
             User user = jdbcTemplate.queryForObject(sql, userRowMapper, email);
             return Optional.ofNullable(user);
@@ -39,7 +43,7 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public Optional<User> findById(Long id) {
-        String sql = "SELECT id, email, password, nickname, role FROM users WHERE id = ?";
+        String sql = "SELECT id, email, password, nickname, role, deleted_at FROM users WHERE id = ?";
         try {
             User user = jdbcTemplate.queryForObject(sql, userRowMapper, id);
             return Optional.ofNullable(user);
@@ -60,5 +64,12 @@ public class UserDaoImpl implements UserDao {
     public void updateNickname(Long userId, String nickname) {
         String sql = "UPDATE users SET nickname = ? WHERE id = ?";
         jdbcTemplate.update(sql, nickname, userId);
+    }
+
+    // ⭕ 退会機能：物理削除ではなく deleted_at を設定するだけ（出品履歴・メッセージの整合性を保つため）
+    @Override
+    public void softDelete(Long userId) {
+        String sql = "UPDATE users SET deleted_at = NOW() WHERE id = ?";
+        jdbcTemplate.update(sql, userId);
     }
 }

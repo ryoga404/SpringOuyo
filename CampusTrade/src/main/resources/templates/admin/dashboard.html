@@ -12,7 +12,14 @@
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
         .navbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display:flex; justify-content:space-between; align-items:center; }
         .logo { font-size: 1.5rem; font-weight: 800; color: var(--primary); text-decoration: none; }
+        .nav-links a { color: var(--text-muted); text-decoration: none; font-weight: 700; font-size: 0.85rem; margin-left: 1.5rem; }
+        .nav-links a:hover { color: var(--primary); }
         .container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .stat-num { font-size: 1.8rem; font-weight: 800; color: var(--primary); }
+        .stat-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-top: 0.25rem; }
+        .stat-card.alert .stat-num { color: var(--danger); }
         table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
         th { background: #f1f5f9; font-weight: 700; color: var(--text-muted); }
@@ -31,10 +38,44 @@
 
     <nav class="navbar">
         <a href="/products" class="logo">🏫 CampusTrade</a>
-        <span style="font-weight:700; color: var(--text-muted);">🛡️ 管理者ダッシュボード</span>
+        <div>
+            <span style="font-weight:700; color: var(--text-muted);">🛡️ 管理者ダッシュボード</span>
+            <span class="nav-links">
+                <a href="/admin/dashboard">商品一覧</a>
+                <a href="/admin/reports">🚩 通報一覧 <span th:if="${pendingReportCount > 0}" th:text="'(' + ${pendingReportCount} + ')'"></span></a>
+            </span>
+        </div>
     </nav>
 
     <div class="container">
+        <!-- ⭕ 10. 統計情報 -->
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-num" th:text="${totalProducts}">0</div>
+                <div class="stat-label">総出品数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num" th:text="${statusCounts.get('OPEN') ?: 0}">0</div>
+                <div class="stat-label">出品中(OPEN)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num" th:text="${statusCounts.get('LOCKED') ?: 0}">0</div>
+                <div class="stat-label">取引中(LOCKED)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num" th:text="${statusCounts.get('CLOSED') ?: 0}">0</div>
+                <div class="stat-label">取引完了(CLOSED)</div>
+            </div>
+            <div class="stat-card alert">
+                <div class="stat-num" th:text="${pendingReportCount}">0</div>
+                <div class="stat-label">未対応の通報</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num" th:text="${pendingOfferCount}">0</div>
+                <div class="stat-label">保留中のオファー</div>
+            </div>
+        </div>
+
         <h1 style="font-weight:800;">商品一覧（全ステータス）</h1>
         <table>
             <thead>

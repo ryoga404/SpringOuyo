@@ -38,4 +38,9 @@ public class UserService {
     public void updateNickname(Long userId, String nickname) {
         userDao.updateNickname(userId, nickname);
     }
+
+    // ⭕ 11. 退会機能：ソフトデリート（deleted_atを設定するだけで、出品履歴・メッセージは残す）
+    public void deleteAccount(Long userId) {
+        userDao.softDelete(userId);
+    }
 }

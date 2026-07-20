@@ -1,5 +1,9 @@
 package com.example.demo.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -57,5 +61,32 @@ public class UserController {
             model.addAttribute("error", "登録に失敗しました。入力内容を確認するか、別のメールアドレスをお試しください。");
             return "register";
         }
+    }
+
+    // ====================== 11. 退会機能 ======================
+
+    // ⭕ 退会確認画面
+    @GetMapping("/account/delete")
+    public String deleteConfirm(Authentication authentication, Model model) {
+        if (authentication == null) {
+            return "redirect:/login";
+        }
+        User currentUser = userService.getUserByEmail(authentication.getName()).orElse(null);
+        model.addAttribute("currentUser", currentUser);
+        return "account/delete";
+    }
+
+    // ⭕ 退会の実行：ソフトデリートしてログアウトさせる
+    @PostMapping("/account/delete")
+    public String deleteAccount(Authentication authentication, HttpServletRequest request) {
+        if (authentication == null) {
+            return "redirect:/login";
+        }
+        User currentUser = userService.getUserByEmail(authentication.getName()).orElse(null);
+        if (currentUser != null) {
+            userService.deleteAccount(currentUser.getId());
+        }
+        new SecurityContextLogoutHandler().logout(request, null, authentication);
+        return "redirect:/login?deleted=1";
     }
 }

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>退会確認 - CampusTrade</title>
+    <style>
+        :root { --primary: #2563eb; --bg: #f8fafc; --surface: #ffffff; --text: #0f172a; --text-muted: #64748b; --border: #e2e8f0; --danger: #ef4444; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
+        .navbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; }
+        .container { max-width: 500px; margin: 3rem auto; padding: 0 1rem; }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: center; }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 700; cursor: pointer; border: none; font-size: 1rem; text-decoration: none; display:inline-block; margin: 0.4rem; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-secondary { background: #e2e8f0; color: var(--text); }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="/products" style="font-size: 1.5rem; font-weight: 800; color: var(--primary); text-decoration: none;">🏫 CampusTrade</a>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <h1 style="font-size: 1.4rem; margin-top: 0;">🚪 本当に退会しますか？</h1>
+            <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.7;">
+                退会すると <strong th:text="${currentUser.nickname}">ニックネーム</strong> さんはログインできなくなります。<br>
+                出品履歴やメッセージ・レビューなどのデータは、他のユーザーとの取引整合性を保つため削除されずに残ります。<br>
+                この操作は取り消せません。
+            </p>
+            <form th:action="@{/account/delete}" method="post" style="margin-top: 1.5rem;">
+                <a href="/products/mypage" class="btn btn-secondary">キャンセル</a>
+                <button type="submit" class="btn btn-danger">退会する</button>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>

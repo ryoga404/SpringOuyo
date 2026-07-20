@@ -7,6 +7,9 @@ public class User {
     private String nickname;
     private String role;
 
+    // ⭕ 退会機能（ソフトデリート）用。deleted_at が NULL でなければ退会済みとみなす。
+    private boolean deleted;
+
     public User() {}
 
     public User(Long id, String email, String password, String nickname, String role) {
@@ -40,4 +43,7 @@ public class User {
         return this.email;
     }
     public void setNickname(String nickname) { this.nickname = nickname; }
+
+    public boolean isDeleted() { return deleted; }
+    public void setDeleted(boolean deleted) { this.deleted = deleted; }
 }

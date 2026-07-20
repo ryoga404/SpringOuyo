@@ -17,11 +17,18 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.example.demo.dao.FavoriteDao;
 import com.example.demo.dao.MessageDao;
+import com.example.demo.dao.OfferDao;
 import com.example.demo.dao.ProductDaoImpl;
+import com.example.demo.dao.ReportDao;
+import com.example.demo.dao.ReviewDao;
 import com.example.demo.model.Category;
 import com.example.demo.model.Message;
+import com.example.demo.model.Offer;
 import com.example.demo.model.Product;
+import com.example.demo.model.Report;
+import com.example.demo.model.Review;
 import com.example.demo.model.User;
+import com.example.demo.service.NotificationService;
 import com.example.demo.service.ProductImageService;
 import com.example.demo.service.UserService;
 
@@ -33,14 +40,23 @@ public class ProductController {
     private final FavoriteDao favoriteDao;
     private final UserService userService;
     private final ProductImageService productImageService;
+    private final ReviewDao reviewDao;
+    private final ReportDao reportDao;
+    private final OfferDao offerDao;
+    private final NotificationService notificationService;
 
     public ProductController(ProductDaoImpl productDao, MessageDao messageDao, FavoriteDao favoriteDao,
-            UserService userService, ProductImageService productImageService) {
+            UserService userService, ProductImageService productImageService, ReviewDao reviewDao,
+            ReportDao reportDao, OfferDao offerDao, NotificationService notificationService) {
         this.productDao = productDao;
         this.messageDao = messageDao;
         this.favoriteDao = favoriteDao;
         this.userService = userService;
         this.productImageService = productImageService;
+        this.reviewDao = reviewDao;
+        this.reportDao = reportDao;
+        this.offerDao = offerDao;
+        this.notificationService = notificationService;
     }
 
     private User currentUser(Authentication authentication) {
@@ -69,6 +85,7 @@ public class ProductController {
         model.addAttribute("categories", categories);
         model.addAttribute("keyword", keyword);
         model.addAttribute("selectedCategoryId", categoryId);
+        model.addAttribute("selectedSort", sort);
 
         return "product/list";
     }
@@ -82,6 +99,11 @@ public class ProductController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "指定された商品が見つかりません");
         }
         product.setHasImage(productImageService.hasImage(id));
+        // ⭕ 複数画像対応：実際に保存されている画像URL一覧
+        product.setImageUrls(productImageService.getImageUrls(id));
+
+        // ⭕ 検索強化：閲覧数を+1
+        productDao.incrementViewCount(id);
 
         User currentUser = currentUser(authentication);
         Long currentUserId = currentUser != null ? currentUser.getId() : null;
@@ -106,6 +128,19 @@ public class ProductController {
         // ⭕ 自分側が取引完了の確認済みかどうか（双方確認式のボタン制御用）
         boolean myConfirmed = isSeller ? product.isSellerConfirmed() : (isBuyer && product.isBuyerConfirmed());
 
+        // ⭕ レビュー機能：出品者が受けた評価の平均・件数、取引完了後にレビュー可能かどうか
+        Double sellerAvgRating = reviewDao.getAverageRating(product.getSellerId());
+        int sellerReviewCount = reviewDao.countByRevieweeId(product.getSellerId());
+        List<Review> productReviews = "CLOSED".equals(product.getStatus())
+                ? reviewDao.findByRevieweeId(product.getSellerId()) : new ArrayList<>();
+        boolean canReview = "CLOSED".equals(product.getStatus()) && isBuyerOrSeller
+                && currentUserId != null && !reviewDao.hasReviewed(id, currentUserId);
+
+        // ⭕ 価格交渉：オファー一覧（出品者、またはオファー送信者本人にのみテンプレート側で表示）
+        List<Offer> offers = "OPEN".equals(product.getStatus()) ? offerDao.findByProductId(id) : new ArrayList<>();
+        boolean canOffer = currentUserId != null && !isSeller && "OPEN".equals(product.getStatus())
+                && !offerDao.hasPendingOffer(id, currentUserId);
+
         model.addAttribute("product", product);
         model.addAttribute("messages", messages);
         model.addAttribute("canViewMessages", canViewMessages);
@@ -115,6 +150,12 @@ public class ProductController {
         model.addAttribute("currentUserId", currentUserId);
         model.addAttribute("isFavorite", isFavorite);
         model.addAttribute("myConfirmed", myConfirmed);
+        model.addAttribute("sellerAvgRating", sellerAvgRating);
+        model.addAttribute("sellerReviewCount", sellerReviewCount);
+        model.addAttribute("productReviews", productReviews);
+        model.addAttribute("canReview", canReview);
+        model.addAttribute("offers", offers);
+        model.addAttribute("canOffer", canOffer);
 
         return "product/detail";
     }
@@ -136,6 +177,9 @@ public class ProductController {
             boolean isSeller = currentUser.getId().equals(product.getSellerId());
             if ("OPEN".equals(product.getStatus()) && !isSeller) {
                 productDao.updateStatus(id, "LOCKED", currentUser.getId());
+                notificationService.notify(product.getSellerId(), "OFFER",
+                        currentUser.getNickname() + "さんが「" + product.getProductName() + "」の購入を申し込みました",
+                        "/products/" + id);
             }
         }
 
@@ -164,7 +208,166 @@ public class ProductController {
         return "redirect:/products/" + id;
     }
 
-    // 💡 お気に入りの追加・解除
+    // ====================== 5. 取引キャンセル ======================
+    // ⭕ LOCKED状態の取引を出品者・購入者どちらからでもキャンセルし、OPENに戻せるようにする
+    @PostMapping("/products/{id}/cancel")
+    public String cancel(@PathVariable("id") Long id, Authentication authentication) {
+        Product product = productDao.findById(id);
+        if (product == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "指定された商品が見つかりません");
+        }
+        User currentUser = currentUser(authentication);
+        if (currentUser == null || !"LOCKED".equals(product.getStatus())) {
+            return "redirect:/products/" + id;
+        }
+        boolean isSeller = currentUser.getId().equals(product.getSellerId());
+        boolean isBuyer = currentUser.getId().equals(product.getBuyerId());
+        if (isSeller || isBuyer) {
+            productDao.cancelTransaction(id);
+            Long otherPartyId = isSeller ? product.getBuyerId() : product.getSellerId();
+            notificationService.notify(otherPartyId, "SYSTEM",
+                    "「" + product.getProductName() + "」の取引がキャンセルされ、再び出品中に戻りました",
+                    "/products/" + id);
+        }
+        return "redirect:/products/" + id;
+    }
+
+    // ====================== 6. 通報機能 ======================
+    @PostMapping("/products/{id}/report")
+    public String report(@PathVariable("id") Long id,
+            @RequestParam("reason") String reason,
+            @RequestParam(name = "detail", required = false) String detail,
+            Authentication authentication) {
+        Product product = productDao.findById(id);
+        if (product == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "指定された商品が見つかりません");
+        }
+        User currentUser = currentUser(authentication);
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
+        Report reportEntity = new Report();
+        reportEntity.setProductId(id);
+        reportEntity.setReporterId(currentUser.getId());
+        reportEntity.setReason(reason);
+        reportEntity.setDetail(detail);
+        reportDao.save(reportEntity);
+        return "redirect:/products/" + id + "?reported=1";
+    }
+
+    // ====================== 7. 価格交渉（オファー） ======================
+    @PostMapping("/products/{id}/offer")
+    public String createOffer(@PathVariable("id") Long id,
+            @RequestParam("offerPrice") Integer offerPrice,
+            Authentication authentication) {
+        Product product = productDao.findById(id);
+        if (product == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "指定された商品が見つかりません");
+        }
+        User currentUser = currentUser(authentication);
+        if (currentUser == null || currentUser.getId().equals(product.getSellerId())) {
+            return "redirect:/products/" + id;
+        }
+        if (!"OPEN".equals(product.getStatus()) || offerPrice == null || offerPrice < 0) {
+            return "redirect:/products/" + id;
+        }
+
+        Offer offer = new Offer();
+        offer.setProductId(id);
+        offer.setSenderId(currentUser.getId());
+        offer.setOfferPrice(offerPrice);
+        offerDao.save(offer);
+
+        notificationService.notify(product.getSellerId(), "OFFER",
+                currentUser.getNickname() + "さんが「" + product.getProductName() + "」に" + offerPrice + "円のオファーを送りました",
+                "/products/" + id);
+
+        return "redirect:/products/" + id + "#chat";
+    }
+
+    @PostMapping("/products/{id}/offers/{offerId}/accept")
+    public String acceptOffer(@PathVariable("id") Long id, @PathVariable("offerId") Long offerId, Authentication authentication) {
+        Product product = productDao.findById(id);
+        Offer offer = offerDao.findById(offerId);
+        User currentUser = currentUser(authentication);
+        if (product == null || offer == null || currentUser == null
+                || !currentUser.getId().equals(product.getSellerId())
+                || !"PENDING".equals(offer.getStatus())
+                || !"OPEN".equals(product.getStatus())) {
+            return "redirect:/products/" + id;
+        }
+
+        productDao.lockWithOfferPrice(id, offer.getSenderId(), offer.getOfferPrice());
+        offerDao.updateStatus(offerId, "ACCEPTED");
+        offerDao.rejectOtherPendingOffers(id, offerId);
+
+        notificationService.notify(offer.getSenderId(), "OFFER",
+                "「" + product.getProductName() + "」へのオファー（" + offer.getOfferPrice() + "円）が承諾されました",
+                "/products/" + id);
+
+        return "redirect:/products/" + id;
+    }
+
+    @PostMapping("/products/{id}/offers/{offerId}/reject")
+    public String rejectOffer(@PathVariable("id") Long id, @PathVariable("offerId") Long offerId, Authentication authentication) {
+        Product product = productDao.findById(id);
+        Offer offer = offerDao.findById(offerId);
+        User currentUser = currentUser(authentication);
+        if (product == null || offer == null || currentUser == null
+                || !currentUser.getId().equals(product.getSellerId())
+                || !"PENDING".equals(offer.getStatus())) {
+            return "redirect:/products/" + id;
+        }
+        offerDao.updateStatus(offerId, "REJECTED");
+        notificationService.notify(offer.getSenderId(), "OFFER",
+                "「" + product.getProductName() + "」へのオファー（" + offer.getOfferPrice() + "円）は見送られました",
+                "/products/" + id);
+        return "redirect:/products/" + id;
+    }
+
+    // ====================== 3. レビュー機能 ======================
+    @PostMapping("/products/{id}/review")
+    public String submitReview(@PathVariable("id") Long id,
+            @RequestParam("rating") Integer rating,
+            @RequestParam(name = "comment", required = false) String comment,
+            Authentication authentication) {
+        Product product = productDao.findById(id);
+        if (product == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "指定された商品が見つかりません");
+        }
+        User currentUser = currentUser(authentication);
+        if (currentUser == null || !"CLOSED".equals(product.getStatus())) {
+            return "redirect:/products/" + id;
+        }
+        boolean isSeller = currentUser.getId().equals(product.getSellerId());
+        boolean isBuyer = currentUser.getId().equals(product.getBuyerId());
+        if (!isSeller && !isBuyer) {
+            return "redirect:/products/" + id;
+        }
+        if (reviewDao.hasReviewed(id, currentUser.getId())) {
+            return "redirect:/products/" + id;
+        }
+        if (rating == null || rating < 1 || rating > 5) {
+            return "redirect:/products/" + id;
+        }
+
+        Long revieweeId = isSeller ? product.getBuyerId() : product.getSellerId();
+        Review review = new Review();
+        review.setProductId(id);
+        review.setReviewerId(currentUser.getId());
+        review.setRevieweeId(revieweeId);
+        review.setRating(rating);
+        review.setComment(comment != null ? comment.trim() : null);
+        reviewDao.save(review);
+
+        notificationService.notify(revieweeId, "SYSTEM",
+                currentUser.getNickname() + "さんから「" + product.getProductName() + "」の取引レビューが届きました",
+                "/products/" + id);
+
+        return "redirect:/products/" + id;
+    }
+
+    // ⭕ お気に入りの追加・解除
     @PostMapping("/products/{id}/favorite")
     public String toggleFavorite(@PathVariable("id") Long id, Authentication authentication) {
         User currentUser = currentUser(authentication);
@@ -194,7 +397,7 @@ public class ProductController {
             @RequestParam("description") String description,
             @RequestParam("price") Integer price,
             @RequestParam(name = "categoryId", required = false) Integer categoryId,
-            @RequestParam(name = "image", required = false) MultipartFile image,
+            @RequestParam(name = "images", required = false) List<MultipartFile> images,
             Authentication authentication,
             Model model) {
 
@@ -217,9 +420,9 @@ public class ProductController {
 
         Long newId = productDao.save(product);
 
-        // ⭕ 画像が指定されていれば、商品IDのファイル名で保存する
+        // ⭕ 複数画像が指定されていれば、商品IDの連番ファイル名で保存する（最大5枚）
         try {
-            productImageService.saveImage(newId, image);
+            productImageService.saveImages(newId, images);
         } catch (IOException e) {
             // 画像保存に失敗しても出品自体は成立させる（画像なし扱い）
         }
@@ -245,6 +448,7 @@ public class ProductController {
             return "redirect:/products/" + id;
         }
         product.setHasImage(productImageService.hasImage(id));
+        product.setImageUrls(productImageService.getImageUrls(id));
 
         model.addAttribute("product", product);
         model.addAttribute("categories", productDao.findAllCategories());
@@ -259,7 +463,7 @@ public class ProductController {
             @RequestParam("description") String description,
             @RequestParam("price") Integer price,
             @RequestParam(name = "categoryId", required = false) Integer categoryId,
-            @RequestParam(name = "image", required = false) MultipartFile image,
+            @RequestParam(name = "images", required = false) List<MultipartFile> images,
             Authentication authentication,
             Model model) {
 
@@ -283,8 +487,12 @@ public class ProductController {
             existing.setPrice(price);
             existing.setCategoryId(categoryId);
             existing.setHasImage(productImageService.hasImage(id));
+            existing.setImageUrls(productImageService.getImageUrls(id));
             return reShowForm(model, existing, productName, description, price, categoryId, validationError, true);
         }
+
+        // ⭕ 9. 値下げ通知：更新前の価格より安くなった場合、お気に入り登録している全ユーザーに通知する
+        Integer oldPrice = existing.getPrice();
 
         Product product = new Product();
         product.setId(id);
@@ -296,9 +504,18 @@ public class ProductController {
 
         productDao.update(product);
 
+        if (oldPrice != null && price < oldPrice) {
+            List<Long> favoriterIds = favoriteDao.findUserIdsByProductId(id);
+            for (Long userId : favoriterIds) {
+                notificationService.notify(userId, "PRICE_DROP",
+                        "お気に入りの「" + productName.trim() + "」が" + oldPrice + "円→" + price + "円に値下げされました",
+                        "/products/" + id);
+            }
+        }
+
         // ⭕ 新しい画像が選択されていれば上書き保存（未選択なら既存の画像をそのまま維持）
         try {
-            productImageService.saveImage(id, image);
+            productImageService.saveImages(id, images);
         } catch (IOException e) {
             // 画像保存に失敗しても更新自体は成立させる
         }
@@ -343,6 +560,9 @@ public class ProductController {
         model.addAttribute("myPurchases", productDao.findPurchaseHistory(currentUser.getId()));
         model.addAttribute("myNegotiations", productDao.findNegotiations(currentUser.getId()));
         model.addAttribute("myFavorites", favoriteDao.findProductsByUserId(currentUser.getId()));
+        // ⭕ レビュー機能：自分が受け取った評価一覧・平均点
+        model.addAttribute("myReviews", reviewDao.findByRevieweeId(currentUser.getId()));
+        model.addAttribute("myAvgRating", reviewDao.getAverageRating(currentUser.getId()));
 
         return "product/mypage";
     }

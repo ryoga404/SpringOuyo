@@ -37,6 +37,7 @@ public class ProductDaoImpl implements ProductDao {
         );
         product.setSellerConfirmed(rs.getBoolean("seller_confirmed"));
         product.setBuyerConfirmed(rs.getBoolean("buyer_confirmed"));
+        product.setViewCount(rs.getInt("view_count"));
 
         // 大分類・中分類・小分類を結合したものを仮のカテゴリ文字列として設定
         String big = rs.getString("BigCategory");
@@ -77,10 +78,15 @@ public class ProductDaoImpl implements ProductDao {
         List<Object> params = new ArrayList<>();
 
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append("AND (p.product_name LIKE ? OR p.description LIKE ?) ");
-            String likeParam = "%" + keyword.trim() + "%";
-            params.add(likeParam);
-            params.add(likeParam);
+            // ⭕ 検索強化：スペース区切りの複数キーワードをAND検索（商品名・説明のいずれかに全ての語が含まれるものに絞り込む）
+            String[] terms = keyword.trim().split("[\\s\u3000]+");
+            for (String term : terms) {
+                if (term.isEmpty()) continue;
+                sql.append("AND (p.product_name LIKE ? OR p.description LIKE ?) ");
+                String likeParam = "%" + term + "%";
+                params.add(likeParam);
+                params.add(likeParam);
+            }
         }
 
         if (tagCategory != null && !tagCategory.trim().isEmpty()) {
@@ -122,6 +128,9 @@ public class ProductDaoImpl implements ProductDao {
                 sql.append("ORDER BY p.price ASC ");
             } else if ("priceDesc".equals(sort)) {
                 sql.append("ORDER BY p.price DESC ");
+            } else if ("popular".equals(sort)) {
+                // ⭕ 検索強化：人気順（閲覧数の多い順）
+                sql.append("ORDER BY p.view_count DESC ");
             }
         } else {
             sql.append("ORDER BY p.id DESC ");
@@ -148,9 +157,12 @@ public class ProductDaoImpl implements ProductDao {
         return results.isEmpty() ? null : results.get(0);
     }
 
+    // ⭕ 排他制御：レースコンディション対策として、WHEREで現在のステータスがOPENであることを同時にチェックすることで、
+    //    二人のユーザーが同時に購入申込をしても先に更新した方のみが成功する（更新件数0件なら失敗）。
     @Override
     public void updateStatus(Long id, String status, Long buyerId) {
-        String sql = "UPDATE products SET status = ?, buyer_id = ?, seller_confirmed = 0, buyer_confirmed = 0 WHERE id = ?";
+        String sql = "UPDATE products SET status = ?, buyer_id = ?, seller_confirmed = 0, buyer_confirmed = 0 " +
+                "WHERE id = ? AND status = 'OPEN'";
         jdbcTemplate.update(sql, status, buyerId, id);
     }
 
@@ -233,5 +245,36 @@ public class ProductDaoImpl implements ProductDao {
     public void banProduct(Long id) {
         String sql = "UPDATE products SET status = '禁止' WHERE id = ?";
         jdbcTemplate.update(sql, id);
+    }
+
+    // ⭕ 取引キャンセル：LOCKEDのときのみ OPEN に戻し、購入者・確認フラグをリセット
+    @Override
+    public void cancelTransaction(Long id) {
+        String sql = "UPDATE products SET status = 'OPEN', buyer_id = NULL, seller_confirmed = 0, buyer_confirmed = 0 " +
+                "WHERE id = ? AND status = 'LOCKED'";
+        jdbcTemplate.update(sql, id);
+    }
+
+    @Override
+    public void incrementViewCount(Long id) {
+        jdbcTemplate.update("UPDATE products SET view_count = view_count + 1 WHERE id = ?", id);
+    }
+
+    // ⭕ 価格交渉オファーを承諾したとき：価格を更新しつつ LOCKED にする（OPENのときのみ）
+    @Override
+    public void lockWithOfferPrice(Long id, Long buyerId, int newPrice) {
+        String sql = "UPDATE products SET status = 'LOCKED', buyer_id = ?, price = ?, " +
+                "seller_confirmed = 0, buyer_confirmed = 0 WHERE id = ? AND status = 'OPEN'";
+        jdbcTemplate.update(sql, buyerId, newPrice, id);
+    }
+
+    @Override
+    public java.util.Map<String, Integer> countByStatus() {
+        String sql = "SELECT status, COUNT(*) AS cnt FROM products GROUP BY status";
+        java.util.Map<String, Integer> result = new java.util.LinkedHashMap<>();
+        jdbcTemplate.query(sql, rs -> {
+            result.put(rs.getString("status"), rs.getInt("cnt"));
+        });
+        return result;
     }
 }

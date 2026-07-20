@@ -11,4 +11,7 @@ public interface UserDao {
     void save(User user);
     // ⭕ ニックネームのみ更新するメソッド（プロフィール編集用）
     void updateNickname(Long userId, String nickname);
+
+    // ⭕ 退会機能：ソフトデリート（deleted_at に現在日時を設定）
+    void softDelete(Long userId);
 }

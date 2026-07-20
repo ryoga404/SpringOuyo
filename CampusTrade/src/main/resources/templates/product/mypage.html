@@ -34,12 +34,28 @@
     <div class="container">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
             <a href="/products" style="color: var(--text-muted); text-decoration: none; font-weight: 600;">← 商品一覧に戻る</a>
-            <a href="/products/nickname" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.9rem;">✏️ ニックネームを変更する</a>
+            <div style="display:flex; gap:1rem;">
+                <a href="/notifications" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.9rem;">🔔 通知一覧</a>
+                <a href="/products/nickname" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.9rem;">✏️ ニックネームを変更する</a>
+            </div>
         </div>
 
         <div class="card" style="background: linear-gradient(135deg, #eff6ff 0%, #dbedff 100%); border: none;">
             <h1 style="margin: 0; font-size: 1.5rem;">👤 <span th:text="${currentUser.nickname}">ユーザー名</span> のマイページ</h1>
             <p style="margin: 0.25rem 0 0 0; color: var(--text-muted); font-size: 0.9rem;">ログインID: <span th:text="${currentUser.email}">email</span></p>
+            <p th:if="${myAvgRating != null}" style="margin: 0.25rem 0 0 0; color: #b45309; font-weight:700; font-size: 0.9rem;">★ 平均評価 <span th:text="${#numbers.formatDecimal(myAvgRating, 1, 1)}">4.5</span>（<span th:text="${#lists.size(myReviews)}">3</span>件）</p>
+        </div>
+
+        <!-- ⭕ 3. 受け取ったレビュー -->
+        <div class="card">
+            <h2 class="section-title">⭐ 受け取ったレビュー</h2>
+            <ul class="item-list">
+                <li th:each="review : ${myReviews}" class="item-row" style="flex-direction:column; align-items:flex-start; gap:0.2rem;">
+                    <span style="color:#f59e0b; font-weight:700;" th:text="${'★'.repeat(review.rating)}">★★★★★</span>
+                    <span th:if="${review.comment}" th:text="${review.comment}" style="font-size:0.85rem; color:var(--text-muted);"></span>
+                </li>
+                <li th:if="${#lists.isEmpty(myReviews)}" style="color: var(--text-muted); font-style: italic; padding: 0.5rem 0;">まだ受け取ったレビューはありません。</li>
+            </ul>
         </div>
 
         <div class="card" id="fav-section">
@@ -84,6 +100,10 @@
                 </li>
                 <li th:if="${#lists.isEmpty(myPurchases)}" style="color: var(--text-muted); font-style: italic; padding: 0.5rem 0;">購入が完了した商品はありません。</li>
             </ul>
+        </div>
+
+        <div class="card" style="border: 1px solid #fecaca; text-align:center;">
+            <a href="/account/delete" style="color: var(--danger); text-decoration:none; font-weight:700; font-size:0.9rem;">🚪 退会をする</a>
         </div>
     </div>
 

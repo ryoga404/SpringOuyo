@@ -11,8 +11,10 @@
             --border: #e2e8f0; --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
         }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; line-height: 1.5; }
-        .navbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; }
+        .navbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display:flex; justify-content:space-between; align-items:center; }
         .logo { font-size: 1.5rem; font-weight: 800; color: var(--primary); text-decoration: none; }
+        .bell { position: relative; text-decoration:none; color: var(--text); font-size:1.3rem; }
+        .bell-badge { position:absolute; top:-6px; right:-10px; background:var(--danger); color:#fff; font-size:0.65rem; font-weight:800; border-radius:10px; padding:1px 5px; }
         .container { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
         .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
         .back-link { display: inline-flex; align-items: center; color: var(--text-muted); text-decoration: none; font-weight: 600; margin-bottom: 1rem; }
@@ -24,9 +26,14 @@
         .OPEN { background: #e0f2fe; color: #0369a1; }
         .LOCKED { background: #fef3c7; color: #b45309; }
         .CLOSED { background: #f1f5f9; color: #475569; }
+        .禁止 { background: #fee2e2; color: #b91c1c; }
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; background: #f8fafc; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; }
+        .seller-rating { font-size: 0.8rem; color: var(--warning); font-weight: 700; }
 
-        .fav-box { margin-bottom: 1.5rem; text-align: right; display:flex; gap:0.5rem; justify-content:flex-end; }
+        .image-gallery { display: flex; gap: 0.5rem; overflow-x: auto; margin: 1rem 0; }
+        .image-gallery img { width: 140px; height: 140px; object-fit: cover; border-radius: 8px; flex-shrink: 0; border: 1px solid var(--border); }
+
+        .fav-box { margin-bottom: 1.5rem; text-align: right; display:flex; gap:0.5rem; justify-content:flex-end; flex-wrap: wrap; }
         .btn-fav { padding: 0.75rem 1.5rem; border-radius: 30px; font-weight: 700; cursor: pointer; border: 2px solid #cbd5e1; font-size: 1rem; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .btn-fav.not-active { background: #ffffff; color: #64748b; }
         .btn-fav.not-active:hover { background: #f1f5f9; border-color: #94a3b8; color: #0f172a; }
@@ -39,6 +46,7 @@
         .btn-warning { background: var(--warning); color: white; }
         .btn-secondary { background: #e2e8f0; color: var(--text); }
         .btn-danger-outline { background: #fff; color: var(--danger); border: 1px solid #fca5a5; }
+        .btn-outline { background: #fff; color: var(--text-muted); border: 1px solid var(--border); }
         .btn-sm { padding: 0.35rem 0.8rem; font-size: 0.8rem; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -54,12 +62,33 @@
         .chat-form textarea { width: 100%; box-sizing: border-box; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; outline: none; margin-bottom: 0.5rem; resize: none; }
         .private-note { background: #fef9c3; color: #854d0e; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem; font-weight: 600; }
         .locked-note { background: #f1f5f9; color: var(--text-muted); padding: 2rem 1rem; text-align: center; border-radius: 8px; font-style: italic; }
+
+        .offer-row { display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0; border-bottom:1px solid var(--border); font-size:0.9rem; }
+        .offer-status { font-size:0.75rem; font-weight:700; padding:0.2rem 0.5rem; border-radius:6px; }
+        .offer-status.PENDING { background:#fef3c7; color:#b45309; }
+        .offer-status.ACCEPTED { background:#dcfce7; color:#166534; }
+        .offer-status.REJECTED { background:#fee2e2; color:#b91c1c; }
+        .offer-form { display:flex; gap:0.5rem; margin-top:0.75rem; }
+        .offer-form input { flex:1; padding:0.6rem; border:1px solid var(--border); border-radius:8px; }
+
+        .review-card { border-bottom: 1px solid var(--border); padding: 0.75rem 0; }
+        .stars { color: #f59e0b; font-weight: 700; }
+        .review-form select, .review-form textarea { width:100%; box-sizing:border-box; padding:0.6rem; border:1px solid var(--border); border-radius:8px; margin-bottom:0.5rem; }
+
+        .report-toggle { background:none; border:none; color: var(--text-muted); font-size:0.8rem; text-decoration:underline; cursor:pointer; }
+        .report-form { display:none; margin-top:0.75rem; background:#fff7ed; border:1px solid #fed7aa; padding:1rem; border-radius:8px; }
+        .report-form.open { display:block; }
+        .report-form select, .report-form textarea { width:100%; box-sizing:border-box; padding:0.6rem; border:1px solid var(--border); border-radius:8px; margin-bottom:0.5rem; }
     </style>
 </head>
 <body>
 
     <nav class="navbar">
         <a href="/products" class="logo">🏫 CampusTrade</a>
+        <a th:if="${loginUser != null}" href="/notifications" class="bell">
+            🔔
+            <span th:if="${unreadNotificationCount > 0}" class="bell-badge" th:text="${unreadNotificationCount}">1</span>
+        </a>
     </nav>
 
     <div class="container">
@@ -74,13 +103,9 @@
                     <button type="submit" class="btn btn-danger-outline btn-sm">🗑 削除</button>
                 </form>
 
-                <form th:action="@{/products/{id}/favorite(id=${product.id})}" method="post" style="margin: 0;">
-                    <button type="submit" th:if="${isFavorite}" class="btn-fav active">
-                        ❤️ お気に入り中
-                    </button>
-                    <button type="submit" th:if="${!isFavorite}" class="btn-fav not-active">
-                        🤍 お気に入りに追加
-                    </button>
+                <form th:if="${loginUser != null}" th:action="@{/products/{id}/favorite(id=${product.id})}" method="post" style="margin: 0;">
+                    <button type="submit" th:if="${isFavorite}" class="btn-fav active">❤️ お気に入り中</button>
+                    <button type="submit" th:if="${!isFavorite}" class="btn-fav not-active">🤍 お気に入りに追加</button>
                 </form>
             </div>
         </div>
@@ -90,30 +115,66 @@
                 <h1 style="margin: 0; font-weight: 800; font-size: 1.75rem;" th:text="${product.productName}">商品名</h1>
                 <span class="badge" th:classappend="${product.status}" th:text="${product.status}">OPEN</span>
             </div>
-            <img th:if="${product.hasImage}" th:src="@{'/images/products/' + ${product.id} + '.jpg'}" alt="商品画像" style="width:100%; max-height:400px; object-fit:cover; border-radius:8px; margin: 1rem 0;">
+
+            <!-- ⭕ 4. 複数画像対応：1枚目をメイン表示し、2枚目以降はギャラリーで表示 -->
+            <img th:if="${!#lists.isEmpty(product.imageUrls)}" th:src="@{${product.imageUrls[0]}}" alt="商品画像" style="width:100%; max-height:400px; object-fit:cover; border-radius:8px; margin: 1rem 0;">
+            <div th:if="${product.imageUrls.size() > 1}" class="image-gallery">
+                <img th:each="url : ${product.imageUrls}" th:src="@{${url}}" alt="商品画像">
+            </div>
+
             <div class="price" th:text="${product.price}">0</div>
             <div class="info-grid">
                 <div><span style="font-size:0.8rem;color:var(--text-muted);">カテゴリ</span><br><strong th:text="${product.category}">本</strong></div>
-                <div><span style="font-size:0.8rem;color:var(--text-muted);">👤出品者</span><br><strong th:text="${product.seller.nickname}">ニックネーム</strong></div>
+                <div>
+                    <span style="font-size:0.8rem;color:var(--text-muted);">👤出品者</span><br>
+                    <strong th:text="${product.seller.nickname}">ニックネーム</strong>
+                    <!-- ⭕ 3. 出品者の評価を表示 -->
+                    <span th:if="${sellerReviewCount > 0}" class="seller-rating">
+                        ★ <span th:text="${#numbers.formatDecimal(sellerAvgRating, 1, 1)}">4.5</span>（<span th:text="${sellerReviewCount}">3</span>件）
+                    </span>
+                    <span th:if="${sellerReviewCount == 0}" style="font-size:0.75rem;color:var(--text-muted);">評価はまだありません</span>
+                </div>
             </div>
             <h3 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--text-muted);">📋 商品説明</h3>
             <div th:text="${product.description}" style="white-space: pre-wrap; background:#fafafa; padding:1rem; border-radius:8px; border:1px solid var(--border); color:#334155;"></div>
+
+            <!-- ⭕ 6. 通報機能 -->
+            <div th:if="${loginUser != null and !isSeller}" style="margin-top:1rem; text-align:right;">
+                <button type="button" class="report-toggle" onclick="document.getElementById('reportForm').classList.toggle('open')">🚩 この商品を通報する</button>
+                <div id="reportForm" class="report-form">
+                    <form th:action="@{/products/{id}/report(id=${product.id})}" method="post">
+                        <select name="reason" required>
+                            <option value="">-- 通報理由を選択 --</option>
+                            <option value="禁止物の出品">禁止物・規約違反の出品</option>
+                            <option value="詐欺の疑い">詐欺の疑い</option>
+                            <option value="不快な内容">不快・不適切な内容</option>
+                            <option value="その他">その他</option>
+                        </select>
+                        <textarea name="detail" rows="2" placeholder="詳細（任意）"></textarea>
+                        <button type="submit" class="btn btn-danger-outline btn-sm" onclick="return confirm('この商品を通報します。よろしいですか？');">通報する</button>
+                    </form>
+                </div>
+            </div>
         </div>
 
         <div class="card" style="border-left: 5px solid var(--warning); background: #fffdf5;">
             <h2 style="margin:0 0 0.5rem 0; font-size:1.2rem; font-weight: 800;">📊 取引ステータス</h2>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">フェーズに合わせてボタンを押してください。</p>
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                <!-- 出品者本人には「購入申込」ボタンを出さない（自分の商品は買えない） -->
-                <form th:if="${product.status == 'OPEN' and !isSeller}"
+                <form th:if="${product.status == 'OPEN' and !isSeller and loginUser != null}"
                       th:action="@{/products/{id}/status(id=${product.id})}" method="post" style="margin: 0;">
                     <input type="hidden" name="newStatus" value="LOCKED">
                     <button type="submit" class="btn btn-warning">🤝 購入申込（LOCKEDへ）</button>
                 </form>
-                <!-- 取引完了ボタンは、LOCKED状態かつ出品者・購入者本人にのみ表示。双方が確認すると自動的にCLOSEDになる -->
                 <form th:if="${product.status == 'LOCKED' and isBuyerOrSeller and !myConfirmed}"
                       th:action="@{/products/{id}/confirm-complete(id=${product.id})}" method="post" style="margin: 0;">
                     <button type="submit" class="btn btn-success">📦 取引完了を確認する</button>
+                </form>
+                <!-- ⭕ 5. 取引キャンセル -->
+                <form th:if="${product.status == 'LOCKED' and isBuyerOrSeller}"
+                      th:action="@{/products/{id}/cancel(id=${product.id})}" method="post" style="margin: 0;"
+                      onsubmit="return confirm('取引をキャンセルし、商品を再度「出品中」に戻します。よろしいですか？');">
+                    <button type="submit" class="btn btn-outline btn-sm">↩️ 取引をキャンセルする</button>
                 </form>
                 <span th:if="${product.status == 'LOCKED' and isBuyerOrSeller and myConfirmed}" style="color: var(--success); font-weight: 700; align-self: center; font-size: 0.85rem;">
                     ✅ あなたは確認済みです。相手の確認を待っています&hellip;
@@ -128,6 +189,59 @@
             </div>
         </div>
 
+        <!-- ⭕ 7. 価格交渉（オファー） -->
+        <div class="card" th:if="${product.status == 'OPEN' and loginUser != null}">
+            <h2 style="margin: 0 0 1rem 0; font-size: 1.15rem; font-weight: 800;">💰 価格交渉</h2>
+
+            <div th:if="${!#lists.isEmpty(offers)}">
+                <div th:each="offer : ${offers}" class="offer-row" th:if="${isSeller or offer.senderId == currentUserId}">
+                    <span>
+                        <strong th:text="${offer.senderNickname}">ニックネーム</strong> さんから
+                        <strong th:text="${offer.offerPrice} + '円'">1000円</strong> のオファー
+                        <span class="offer-status" th:classappend="${offer.status}" th:text="${offer.status}">PENDING</span>
+                    </span>
+                    <span th:if="${isSeller and offer.status == 'PENDING'}" style="display:flex; gap:0.4rem;">
+                        <form th:action="@{/products/{id}/offers/{offerId}/accept(id=${product.id},offerId=${offer.id})}" method="post" style="margin:0;">
+                            <button type="submit" class="btn btn-success btn-sm">承諾</button>
+                        </form>
+                        <form th:action="@{/products/{id}/offers/{offerId}/reject(id=${product.id},offerId=${offer.id})}" method="post" style="margin:0;">
+                            <button type="submit" class="btn btn-outline btn-sm">却下</button>
+                        </form>
+                    </span>
+                </div>
+            </div>
+
+            <form th:if="${canOffer}" th:action="@{/products/{id}/offer(id=${product.id})}" method="post" class="offer-form">
+                <input type="number" name="offerPrice" min="0" max="9999999" placeholder="希望価格（円）" required>
+                <button type="submit" class="btn btn-primary btn-sm">オファーを送る</button>
+            </form>
+        </div>
+
+        <!-- ⭕ 3. レビュー機能 -->
+        <div class="card" th:if="${product.status == 'CLOSED'}">
+            <h2 style="margin: 0 0 1rem 0; font-size: 1.15rem; font-weight: 800;">⭐ 取引レビュー</h2>
+
+            <form th:if="${canReview}" th:action="@{/products/{id}/review(id=${product.id})}" method="post" class="review-form">
+                <select name="rating" required>
+                    <option value="">評価を選択</option>
+                    <option value="5">★★★★★ とても良い</option>
+                    <option value="4">★★★★☆ 良い</option>
+                    <option value="3">★★★☆☆ 普通</option>
+                    <option value="2">★★☆☆☆ やや不満</option>
+                    <option value="1">★☆☆☆☆ 不満</option>
+                </select>
+                <textarea name="comment" rows="2" placeholder="コメント（任意）"></textarea>
+                <button type="submit" class="btn btn-primary btn-sm">レビューを投稿</button>
+            </form>
+
+            <div th:each="review : ${productReviews}" class="review-card">
+                <span class="stars" th:text="${'★'.repeat(review.rating)}">★★★★★</span>
+                <strong th:text="${review.reviewer.nickname}" style="margin-left:0.5rem;">ニックネーム</strong>
+                <p th:if="${review.comment}" th:text="${review.comment}" style="margin: 0.25rem 0 0 0; color: var(--text-muted); font-size:0.9rem;"></p>
+            </div>
+            <p th:if="${#lists.isEmpty(productReviews)}" style="color: var(--text-muted); font-style: italic;">まだレビューはありません。</p>
+        </div>
+
         <div class="card" id="chat">
             <h2 style="margin: 0 0 1rem 0; font-size: 1.25rem; font-weight: 800;">💬 チャットルーム</h2>
 
@@ -135,8 +249,7 @@
                 🔒 取引相手が確定しているため、このやり取りは出品者と購入者以外には表示されません。
             </div>
 
-            <div th:if="${canViewMessages}" class="chat-space">
-                <!-- 💡 実DBに parent_id が無いためフラットな時系列チャットとして表示 -->
+            <div th:if="${canViewMessages}" class="chat-space" id="chatSpace">
                 <div th:each="msg : ${messages}" class="chat-row" th:classappend="${msg.senderId == currentUserId} ? 'me' : 'other'">
                     <div class="chat-bubble-wrap">
                         <div class="chat-meta">
@@ -146,20 +259,69 @@
                         <div class="chat-bubble" th:text="${msg.content}">内容</div>
                     </div>
                 </div>
-                <p th:if="${#lists.isEmpty(messages)}" style="color: var(--text-muted); text-align: center; font-style: italic; margin: 2rem 0;">まだメッセージはありません。</p>
+                <p th:if="${#lists.isEmpty(messages)}" id="noMsgPlaceholder" style="color: var(--text-muted); text-align: center; font-style: italic; margin: 2rem 0;">まだメッセージはありません。</p>
             </div>
 
             <div th:unless="${canViewMessages}" class="locked-note">
                 🔒 この商品の取引は既に別の方と進行中のため、メッセージは表示できません。
             </div>
 
-            <form th:if="${canViewMessages}" th:action="@{/messages/send}" method="post" class="chat-form" style="margin-top: 1rem;">
+            <form th:if="${canViewMessages and loginUser != null}" id="chatForm" th:action="@{/messages/send}" method="post" class="chat-form" style="margin-top: 1rem;">
                 <input type="hidden" name="productId" th:value="${product.id}">
                 <textarea name="content" rows="3" placeholder="質問や手渡しの相談を入力..." required></textarea>
                 <button type="submit" class="btn btn-primary">✉ メッセージを送信</button>
             </form>
         </div>
     </div>
+
+    <!-- ⭕ 8. リアルタイムチャット：WebSocket(STOMP)で同じ商品ページを見ている人に即時反映する -->
+    <th:block th:if="${canViewMessages}">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+        <script th:inline="javascript">
+            const productId = /*[[${product.id}]]*/ 0;
+            const currentUserId = /*[[${currentUserId}]]*/ null;
+
+            const socket = new SockJS('/ws-chat');
+            const stompClient = Stomp.over(socket);
+            stompClient.debug = null; // コンソールログを抑制
+
+            stompClient.connect({}, function () {
+                stompClient.subscribe('/topic/products/' + productId, function (message) {
+                    const data = JSON.parse(message.body);
+                    appendMessage(data);
+                });
+            });
+
+            function appendMessage(data) {
+                const placeholder = document.getElementById('noMsgPlaceholder');
+                if (placeholder) placeholder.remove();
+
+                const chatSpace = document.getElementById('chatSpace');
+                if (!chatSpace) return;
+
+                const isMe = currentUserId != null && String(data.senderId) === String(currentUserId);
+                const row = document.createElement('div');
+                row.className = 'chat-row ' + (isMe ? 'me' : 'other');
+                row.innerHTML =
+                    '<div class="chat-bubble-wrap">' +
+                    '<div class="chat-meta">' + escapeHtml(data.senderNickname) + ' • ' + escapeHtml(data.createdAt) + '</div>' +
+                    '<div class="chat-bubble">' + escapeHtml(data.content) + '</div>' +
+                    '</div>';
+                chatSpace.appendChild(row);
+                chatSpace.scrollTop = chatSpace.scrollHeight;
+            }
+
+            function escapeHtml(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            // フォーム送信後にもチャットが最新化されるよう、送信自体は通常のPOSTのまま行う
+            // （WebSocketはリアルタイム反映専用。フォームPOSTはサーバー側の正としての保存を担う）
+        </script>
+    </th:block>
 
 </body>
 </html>

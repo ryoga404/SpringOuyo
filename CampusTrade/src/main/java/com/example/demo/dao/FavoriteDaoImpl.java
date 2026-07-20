@@ -79,4 +79,10 @@ public class FavoriteDaoImpl implements FavoriteDao {
                 "ORDER BY p.id DESC";
         return jdbcTemplate.query(sql, productRowMapper, userId);
     }
+
+    @Override
+    public List<Long> findUserIdsByProductId(Long productId) {
+        String sql = "SELECT user_id FROM user_favorite WHERE product_id = ?";
+        return jdbcTemplate.queryForList(sql, Long.class, productId);
+    }
 }

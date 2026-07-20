@@ -45,4 +45,16 @@ public interface ProductDao {
 
     // ⭕ 管理者機能：規約違反商品を「禁止」ステータスにする
     void banProduct(Long id);
+
+    // ⭕ 取引キャンセル：LOCKED→OPENに戻し、購入者・確認フラグをリセットする
+    void cancelTransaction(Long id);
+
+    // ⭕ 検索強化：商品詳細の閲覧数を+1する
+    void incrementViewCount(Long id);
+
+    // ⭕ 価格交渉オファー承諾用：价格を指定してLOCKEDにする（updateStatusと同様だが価格も同時に更新）
+    void lockWithOfferPrice(Long id, Long buyerId, int newPrice);
+
+    // ⭕ 管理者ダッシュボード統計：ステータスごとの件数
+    java.util.Map<String, Integer> countByStatus();
 }

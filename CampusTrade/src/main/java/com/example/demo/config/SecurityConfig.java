@@ -27,10 +27,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            .csrf(csrf -> csrf
+                // ⭕ 8. WebSocket(STOMP/SockJS)のハンドシェイクはXHR POSTを伴うため、CSRF保護の対象外とする
+                .ignoringRequestMatchers("/ws-chat/**")
+            )
             .authorizeHttpRequests(auth -> auth
                 // ⭕ /register を追加して、未ログインでもユーザー登録画面を開けるようにします
             		// SecurityConfig.java 内の該当箇所
-            		.requestMatchers("/login", "/register", "/", "/home", "/products", "/css/**", "/js/**", "/images/**").permitAll()
+            		.requestMatchers("/login", "/register", "/", "/home", "/products", "/css/**", "/js/**", "/images/**", "/ws-chat/**").permitAll()
                 // ⭕ 商品一覧・詳細は未ログインでも閲覧できる（購入・出品・コメントは別途認証必須）
                 .requestMatchers(HttpMethod.GET, "/products/{id:[0-9]+}").permitAll()
                 // ⭕ 管理者機能は ROLE_ADMIN のユーザーのみアクセス可能（URL直打ち対策）
@@ -60,6 +64,8 @@ public class SecurityConfig {
                     .withUsername(user.getEmail())
                     .password(user.getPassword())
                     .roles(user.getRole())
+                    // ⭕ 退会済み（deleted_at が設定済み）のアカウントはログインできないようにする
+                    .disabled(user.isDeleted())
                     .build();
         };
     }

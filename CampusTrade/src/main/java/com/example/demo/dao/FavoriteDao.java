@@ -10,4 +10,7 @@ public interface FavoriteDao {
     void remove(Long userId, Long productId);
     // ⭕ マイページの「お気に入り一覧」表示用：ユーザーがお気に入り登録した商品一覧を取得
     List<Product> findProductsByUserId(Long userId);
+
+    // ⭕ 値下げ通知用：ある商品をお気に入り登録している全ユーザーID一覧
+    List<Long> findUserIdsByProductId(Long productId);
 }
