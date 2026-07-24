@@ -2,20 +2,42 @@ package com.example.demo.model;
 
 import java.time.LocalDateTime;
 
-// 💡 実際のDB構造(messagesテーブル)に合わせて parent_id は廃止。
-//    代わりに receiver_id / is_read を持つフラットなメッセージとして扱う。
-//    receiverId が null の間は「商品ページ上での公開Q&A」、
-//    買い手確定後は出品者・購入者間の「非公開メッセージ」として receiverId を設定する。
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+
+@Entity
+@Table(name = "messages") // 実際のテーブル名に合わせて変更してください
 public class Message {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "product_id")
     private Long productId;
+
+    @Column(name = "sender_id")
     private Long senderId;
+
+    @Column(name = "receiver_id")
     private Long receiverId; // null = 公開Q&A（全員に表示）, 値あり = 非公開メッセージ
+
     private String content;
+
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "is_read")
     private boolean isRead;
 
-    private User sender; // 送信者情報（結合して表示用に保持）
+    // DBテーブル上に直接カラムが存在しない・リレーションで保持しない場合は @Transient を付けます
+    @Transient
+    private User sender; // 送信者情報（表示用）
 
     public Message() {}
 

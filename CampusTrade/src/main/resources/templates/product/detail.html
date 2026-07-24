@@ -87,7 +87,7 @@
         <a href="/products" class="logo">🏫 CampusTrade</a>
         <a th:if="${loginUser != null}" href="/notifications" class="bell">
             🔔
-            <span th:if="${unreadNotificationCount > 0}" class="bell-badge" th:text="${unreadNotificationCount}">1</span>
+            <span th:if="${unreadNotificationCount != null and unreadNotificationCount > 0}" class="bell-badge" th:text="${unreadNotificationCount}">1</span>
         </a>
     </nav>
 
@@ -97,7 +97,6 @@
             <a href="/products" class="back-link">← 商品一覧に戻る</a>
 
             <div class="fav-box">
-                <!-- 出品者本人のみ：編集・削除（OPENのときのみ） -->
                 <a th:if="${isSeller and product.status == 'OPEN'}" th:href="@{/products/{id}/edit(id=${product.id})}" class="btn btn-secondary btn-sm">✏️ 編集</a>
                 <form th:if="${isSeller and product.status == 'OPEN'}" th:action="@{/products/{id}/delete(id=${product.id})}" method="post" style="margin:0;" onsubmit="return confirm('この商品を削除します。よろしいですか？');">
                     <button type="submit" class="btn btn-danger-outline btn-sm">🗑 削除</button>
@@ -116,9 +115,8 @@
                 <span class="badge" th:classappend="${product.status}" th:text="${product.status}">OPEN</span>
             </div>
 
-            <!-- ⭕ 4. 複数画像対応：1枚目をメイン表示し、2枚目以降はギャラリーで表示 -->
-            <img th:if="${!#lists.isEmpty(product.imageUrls)}" th:src="@{${product.imageUrls[0]}}" alt="商品画像" style="width:100%; max-height:400px; object-fit:cover; border-radius:8px; margin: 1rem 0;">
-            <div th:if="${product.imageUrls.size() > 1}" class="image-gallery">
+            <img th:if="${product.imageUrls != null and !#lists.isEmpty(product.imageUrls)}" th:src="@{${product.imageUrls[0]}}" alt="商品画像" style="width:100%; max-height:400px; object-fit:cover; border-radius:8px; margin: 1rem 0;">
+            <div th:if="${product.imageUrls != null and #lists.size(product.imageUrls) > 1}" class="image-gallery">
                 <img th:each="url : ${product.imageUrls}" th:src="@{${url}}" alt="商品画像">
             </div>
 
@@ -127,18 +125,16 @@
                 <div><span style="font-size:0.8rem;color:var(--text-muted);">カテゴリ</span><br><strong th:text="${product.category}">本</strong></div>
                 <div>
                     <span style="font-size:0.8rem;color:var(--text-muted);">👤出品者</span><br>
-                    <strong th:text="${product.seller.nickname}">ニックネーム</strong>
-                    <!-- ⭕ 3. 出品者の評価を表示 -->
-                    <span th:if="${sellerReviewCount > 0}" class="seller-rating">
+                    <strong th:text="${product.seller != null ? product.seller.nickname : '不明'}">ニックネーム</strong>
+                    <span th:if="${sellerReviewCount != null and sellerReviewCount > 0}" class="seller-rating">
                         ★ <span th:text="${#numbers.formatDecimal(sellerAvgRating, 1, 1)}">4.5</span>（<span th:text="${sellerReviewCount}">3</span>件）
                     </span>
-                    <span th:if="${sellerReviewCount == 0}" style="font-size:0.75rem;color:var(--text-muted);">評価はまだありません</span>
+                    <span th:if="${sellerReviewCount == null or sellerReviewCount == 0}" style="font-size:0.75rem;color:var(--text-muted);">評価はまだありません</span>
                 </div>
             </div>
             <h3 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--text-muted);">📋 商品説明</h3>
             <div th:text="${product.description}" style="white-space: pre-wrap; background:#fafafa; padding:1rem; border-radius:8px; border:1px solid var(--border); color:#334155;"></div>
 
-            <!-- ⭕ 6. 通報機能 -->
             <div th:if="${loginUser != null and !isSeller}" style="margin-top:1rem; text-align:right;">
                 <button type="button" class="report-toggle" onclick="document.getElementById('reportForm').classList.toggle('open')">🚩 この商品を通報する</button>
                 <div id="reportForm" class="report-form">
@@ -170,7 +166,6 @@
                       th:action="@{/products/{id}/confirm-complete(id=${product.id})}" method="post" style="margin: 0;">
                     <button type="submit" class="btn btn-success">📦 取引完了を確認する</button>
                 </form>
-                <!-- ⭕ 5. 取引キャンセル -->
                 <form th:if="${product.status == 'LOCKED' and isBuyerOrSeller}"
                       th:action="@{/products/{id}/cancel(id=${product.id})}" method="post" style="margin: 0;"
                       onsubmit="return confirm('取引をキャンセルし、商品を再度「出品中」に戻します。よろしいですか？');">
@@ -189,7 +184,6 @@
             </div>
         </div>
 
-        <!-- ⭕ 7. 価格交渉（オファー） -->
         <div class="card" th:if="${product.status == 'OPEN' and loginUser != null}">
             <h2 style="margin: 0 0 1rem 0; font-size: 1.15rem; font-weight: 800;">💰 価格交渉</h2>
 
@@ -217,7 +211,6 @@
             </form>
         </div>
 
-        <!-- ⭕ 3. レビュー機能 -->
         <div class="card" th:if="${product.status == 'CLOSED'}">
             <h2 style="margin: 0 0 1rem 0; font-size: 1.15rem; font-weight: 800;">⭐ 取引レビュー</h2>
 
@@ -236,7 +229,7 @@
 
             <div th:each="review : ${productReviews}" class="review-card">
                 <span class="stars" th:text="${'★'.repeat(review.rating)}">★★★★★</span>
-                <strong th:text="${review.reviewer.nickname}" style="margin-left:0.5rem;">ニックネーム</strong>
+                <strong th:text="${review.reviewer != null ? review.reviewer.nickname : '匿名'}" style="margin-left:0.5rem;">ニックネーム</strong>
                 <p th:if="${review.comment}" th:text="${review.comment}" style="margin: 0.25rem 0 0 0; color: var(--text-muted); font-size:0.9rem;"></p>
             </div>
             <p th:if="${#lists.isEmpty(productReviews)}" style="color: var(--text-muted); font-style: italic;">まだレビューはありません。</p>
@@ -253,8 +246,8 @@
                 <div th:each="msg : ${messages}" class="chat-row" th:classappend="${msg.senderId == currentUserId} ? 'me' : 'other'">
                     <div class="chat-bubble-wrap">
                         <div class="chat-meta">
-                            <span th:text="${msg.sender.nickname}">名前</span> •
-                            <span th:text="${#temporals.format(msg.createdAt, 'MM/dd HH:mm')}">日時</span>
+                            <span th:text="${msg.sender != null ? msg.sender.nickname : '不明'}">名前</span> •
+                            <span th:text="${msg.createdAt != null ? #temporals.format(msg.createdAt, 'MM/dd HH:mm') : ''}">日時</span>
                         </div>
                         <div class="chat-bubble" th:text="${msg.content}">内容</div>
                     </div>
@@ -274,7 +267,6 @@
         </div>
     </div>
 
-    <!-- ⭕ 8. リアルタイムチャット：WebSocket(STOMP)で同じ商品ページを見ている人に即時反映する -->
     <th:block th:if="${canViewMessages}">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
@@ -284,7 +276,7 @@
 
             const socket = new SockJS('/ws-chat');
             const stompClient = Stomp.over(socket);
-            stompClient.debug = null; // コンソールログを抑制
+            stompClient.debug = null;
 
             stompClient.connect({}, function () {
                 stompClient.subscribe('/topic/products/' + productId, function (message) {
@@ -305,8 +297,8 @@
                 row.className = 'chat-row ' + (isMe ? 'me' : 'other');
                 row.innerHTML =
                     '<div class="chat-bubble-wrap">' +
-                    '<div class="chat-meta">' + escapeHtml(data.senderNickname) + ' • ' + escapeHtml(data.createdAt) + '</div>' +
-                    '<div class="chat-bubble">' + escapeHtml(data.content) + '</div>' +
+                    '<div class="chat-meta">' + escapeHtml(data.senderNickname || '不明') + ' • ' + escapeHtml(data.createdAt || '') + '</div>' +
+                    '<div class="chat-bubble">' + escapeHtml(data.content || '') + '</div>' +
                     '</div>';
                 chatSpace.appendChild(row);
                 chatSpace.scrollTop = chatSpace.scrollHeight;
@@ -317,9 +309,6 @@
                 div.textContent = str;
                 return div.innerHTML;
             }
-
-            // フォーム送信後にもチャットが最新化されるよう、送信自体は通常のPOSTのまま行う
-            // （WebSocketはリアルタイム反映専用。フォームPOSTはサーバー側の正としての保存を担う）
         </script>
     </th:block>
 

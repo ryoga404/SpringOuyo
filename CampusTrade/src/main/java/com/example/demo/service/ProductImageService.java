@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -15,11 +16,6 @@ import javax.imageio.ImageIO;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-// 💡 学内演習用の簡易実装：
-//    src/main/resources/static/images/products/ 配下に「商品ID_連番.jpg」という
-//    ファイル名で画像を保存し、そのまま静的リソースとして配信します。
-//    ⭕ 複数枚（最大 MAX_IMAGES 枚）対応：商品ID_1.jpg 〜 商品ID_5.jpg のように連番で保存する。
-//       画像が無い商品は単に「画像なし」として扱う。
 @Service
 public class ProductImageService {
 
@@ -57,8 +53,17 @@ public class ProductImageService {
     public void saveImages(Long productId, List<MultipartFile> files) throws IOException {
         if (files == null || files.isEmpty()) return;
 
+        // アップロードの中に有効なファイルが1つ以上含まれているか事前確認
+        boolean hasValidFile = files.stream().anyMatch(f -> f != null && !f.isEmpty());
+        if (!hasValidFile) {
+            return; // 有効なファイルがなければ既存画像を維持して終了
+        }
+
         Path dirPath = Paths.get(IMAGE_DIR);
         Files.createDirectories(dirPath);
+
+        // 新しい画像を保存する前に、既存の古い画像を一度クリアする
+        deleteImage(productId);
 
         int seq = 1;
         for (MultipartFile file : files) {
@@ -67,13 +72,18 @@ public class ProductImageService {
 
             BufferedImage original = ImageIO.read(file.getInputStream());
             if (original == null) {
-                // 画像として読み込めない場合（画像以外のファイルが指定された等）はスキップ
+                // 画像として読み込めない場合はスキップ
                 continue;
             }
 
-            // JPEGはアルファチャンネルを扱えないため、白背景のRGB画像に変換してから保存する
+            // JPEG変換（白背景のRGB画像に描画）
             BufferedImage rgbImage = new BufferedImage(original.getWidth(), original.getHeight(), BufferedImage.TYPE_INT_RGB);
-            rgbImage.createGraphics().drawImage(original, 0, 0, Color.WHITE, null);
+            Graphics2D g = rgbImage.createGraphics();
+            try {
+                g.drawImage(original, 0, 0, Color.WHITE, null);
+            } finally {
+                g.dispose(); // グラフィックスリソースの確実な解放
+            }
 
             File outputFile = new File(fileName(productId, seq));
             ImageIO.write(rgbImage, "jpg", outputFile);
@@ -82,11 +92,13 @@ public class ProductImageService {
     }
 
     public void deleteImage(Long productId) {
+        if (productId == null) return;
+        
         for (int seq = 1; seq <= MAX_IMAGES; seq++) {
             try {
                 Files.deleteIfExists(Paths.get(fileName(productId, seq)));
             } catch (IOException e) {
-                // 削除に失敗しても致命的ではないため無視する
+                // 削除失敗時は無視
             }
         }
     }

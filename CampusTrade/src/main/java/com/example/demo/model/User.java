@@ -1,15 +1,35 @@
 package com.example.demo.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "users") // 実際のテーブル名に合わせてください
 public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, unique = true)
     private String email;
+
+    @Column(nullable = false)
     private String password;
+
     private String nickname;
+
     private String role;
 
-    // ⭕ 退会機能（ソフトデリート）用。deleted_at が NULL でなければ退会済みとみなす。
+    // ⭕ 退会機能（ソフトデリート）用
+    @Column(name = "is_deleted")
     private boolean deleted;
 
+    // JPA用の引数なしコンストラクタ（必須）
     public User() {}
 
     public User(Long id, String email, String password, String nickname, String role) {

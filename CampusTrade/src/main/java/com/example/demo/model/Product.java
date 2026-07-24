@@ -1,36 +1,69 @@
 package com.example.demo.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+
+@Entity
+@Table(name = "products") // 実際のテーブル名に合わせてください
 public class Product {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "product_name")
     private String productName;
+
     private String description;
+
     private Integer price;
+
+    @Column(name = "category_id")
     private Integer categoryId;
+
     private String status;
+
+    @Column(name = "seller_id")
     private Long sellerId;
+
+    @Column(name = "buyer_id")
     private Long buyerId;
 
     // ⭕ 双方確認式の取引完了フラグ（seller_confirmed / buyer_confirmed カラムに対応）
+    @Column(name = "seller_confirmed")
     private boolean sellerConfirmed;
+
+    @Column(name = "buyer_confirmed")
     private boolean buyerConfirmed;
 
-    // Thymeleafでの表示用（テーブル結合の代わり、または簡易保持用）
+    // ⭕ DBカラムではない表示用・一時保持項目（@Transient を指定してJPAの対象外に設定）
+    @Transient
     private String category;
+
+    @Transient
     private User seller;
 
-    // ⭕ 商品画像の有無（DBカラムではなく、画像ファイルの存在チェック結果を保持する一時的な項目）
+    @Transient
     private boolean hasImage;
 
-    // ⭕ 商品詳細ページの閲覧数（人気順ソート・検索強化用）
+    @Column(name = "view_count")
     private int viewCount;
 
-    // ⭕ 複数画像対応：実際に存在する画像のURL一覧（一時的な項目、DBカラムではない）
+    @Transient
     private java.util.List<String> imageUrls = new java.util.ArrayList<>();
 
-    // ⭕ レビュー機能：この商品の取引についた平均評価・件数（一時的な項目）
+    @Transient
     private Double averageRating;
+
+    @Transient
     private int reviewCount;
 
+    // JPA用の引数なしコンストラクタ（必須）
     public Product() {}
 
     public Product(Long id, String productName, String description, Integer price, 
@@ -45,7 +78,7 @@ public class Product {
         this.buyerId = buyerId;
     }
 
-    // ゲッター・セッター
+    // --- ゲッター・セッター ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

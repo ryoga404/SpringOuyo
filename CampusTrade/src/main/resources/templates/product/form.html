@@ -45,16 +45,16 @@
             <form th:action="${isEdit} ? @{/products/{id}/edit(id=${product.id})} : @{/products/save}" method="post" enctype="multipart/form-data">
                 <div class="form-group">
                     <label class="form-label">商品画像（任意・最大5枚まで）</label>
-                    <div th:if="${isEdit and product.hasImage}" style="display:flex; gap:0.5rem; margin-bottom:0.5rem; flex-wrap:wrap;">
+                    <div th:if="${isEdit and product != null and !#lists.isEmpty(product.imageUrls)}" style="display:flex; gap:0.5rem; margin-bottom:0.5rem; flex-wrap:wrap;">
                         <img th:each="url : ${product.imageUrls}" th:src="@{${url}}" alt="現在の画像" style="width:100px; height:100px; object-fit:cover; border-radius:8px;">
                     </div>
                     <input type="file" name="images" class="form-control" accept="image/*" multiple>
-                    <p th:if="${isEdit and product.hasImage}" style="font-size:0.8rem; color:var(--text-muted); margin: 0.4rem 0 0 0;">新しい画像を選択しなければ現在の画像のままになります。選択した場合は全ての画像が差し替わります。</p>
+                    <p th:if="${isEdit and product != null and !#lists.isEmpty(product.imageUrls)}" style="font-size:0.8rem; color:var(--text-muted); margin: 0.4rem 0 0 0;">新しい画像を選択しなければ現在の画像のままになります。選択した場合は全ての画像が差し替わります。</p>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">商品名</label>
-                    <input type="text" name="productName" class="form-control" th:value="${product.productName}" placeholder="例: 応用情報技術者の教科書" maxlength="255" required>
+                    <input type="text" name="productName" class="form-control" th:value="${product != null ? product.productName : ''}" placeholder="例: 応用情報技術者の教科書" maxlength="255" required>
                 </div>
 
                 <div class="form-group">
@@ -70,17 +70,17 @@
                             <option value="">-- 小分類 --</option>
                         </select>
                     </div>
-                    <input type="hidden" name="categoryId" id="finalCategoryId" th:value="${product.categoryId}" required>
+                    <input type="hidden" name="categoryId" id="finalCategoryId" th:value="${product != null ? product.categoryId : ''}" required>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">希望価格 (円)</label>
-                    <input type="number" name="price" class="form-control" min="0" max="9999999" th:value="${product.price}" placeholder="金額（0〜9,999,999円）" required>
+                    <input type="number" name="price" class="form-control" min="0" max="9999999" th:value="${product != null ? product.price : ''}" placeholder="金額（0〜9,999,999円）" required>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">商品説明</label>
-                    <textarea name="description" class="form-control" rows="5" placeholder="商品の状態や、受け渡し可能な場所（例: 〇〇キャンパス食堂前）などを記入してください。" required th:text="${product.description}"></textarea>
+                    <textarea name="description" class="form-control" rows="5" placeholder="商品の状態や、受け渡し可能な場所（例: 〇〇キャンパス食堂前）などを記入してください。" required th:text="${product != null ? product.description : ''}"></textarea>
                 </div>
 
                 <button type="submit" class="btn btn-primary" th:text="${isEdit} ? '💾 この内容で更新する' : '🚀 この内容で出品する'">出品する</button>
@@ -88,10 +88,9 @@
         </div>
     </div>
 
-    <!-- 💡 商品一覧画面と同じ大中小連動ロジック。編集時は product.categoryId から選択状態を復元する -->
     <script th:inline="javascript">
         const categoryData = /*[[${categories}]]*/ [];
-        const initialCategoryId = /*[[${product.categoryId}]]*/ null;
+        const initialCategoryId = /*[[${product != null ? product.categoryId : null}]]*/ null;
 
         const bigSelect = document.getElementById('bigCategory');
         const midSelect = document.getElementById('midCategory');
@@ -125,7 +124,6 @@
             });
             midSelect.disabled = false;
 
-            // 中分類が無い（NULL）カテゴリの場合は、大分類選択時点でそのIDを確定させる
             const noMid = filtered.find(c => !c.midCategory);
             if (noMid) finalInput.value = noMid.id;
         });
@@ -160,7 +158,6 @@
             }
         });
 
-        // 編集時：既存のカテゴリIDから大・中・小の選択状態を復元
         if (initialCategoryId) {
             const selected = categoryData.find(c => c.id === initialCategoryId);
             if (selected) {

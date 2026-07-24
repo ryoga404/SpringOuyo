@@ -49,7 +49,6 @@
         
         .container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
         
-        /* 💡 検索ボックスエリアのデザイン調整 */
         .search-section { background: var(--surface); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 2rem; }
         .search-form { display: flex; flex-direction: column; gap: 0.75rem; }
         .search-row { display: flex; gap: 0.75rem; }
@@ -61,7 +60,7 @@
         .tag:hover { background: var(--primary); color: white; }
         
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
-        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow: 0.2s; text-decoration: none; color: inherit; display: flex; flex-direction: column; }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; text-decoration: none; color: inherit; display: flex; flex-direction: column; }
         .card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
         .card-thumb { width: 100%; height: 160px; object-fit: cover; background: #f1f5f9; display: block; }
         .card-thumb-placeholder { width: 100%; height: 160px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 2rem; }
@@ -84,7 +83,7 @@
         <div class="dropdown">
             <a th:if="${loginUser != null}" href="/notifications" class="bell" style="position:relative; text-decoration:none; color:var(--text); font-size:1.3rem; margin-right: 1rem;">
                 🔔
-                <span th:if="${unreadNotificationCount > 0}" style="position:absolute; top:-6px; right:-10px; background:var(--danger); color:#fff; font-size:0.65rem; font-weight:800; border-radius:10px; padding:1px 5px;" th:text="${unreadNotificationCount}">1</span>
+                <span th:if="${unreadNotificationCount != null and unreadNotificationCount > 0}" style="position:absolute; top:-6px; right:-10px; background:var(--danger); color:#fff; font-size:0.65rem; font-weight:800; border-radius:10px; padding:1px 5px;" th:text="${unreadNotificationCount}">1</span>
             </a>
             <div class="user-name-btn">
                 👤 <span th:text="${loginUser != null ? loginUser.nickname : 'ゲスト'}">ゲスト</span> さん
@@ -115,7 +114,6 @@
             <a href="/products/new" class="btn btn-primary" style="background:#10b981;">+ 商品を出品する</a>
         </div>
 
-        <!-- 💡 検索セクション：大中小分類の3連選択ボックスを綺麗に統合 -->
         <div class="search-section">
             <form th:action="@{/products}" method="get" class="search-form">
                 <div class="search-row">
@@ -123,7 +121,6 @@
                     <button type="submit" class="btn btn-primary">検索</button>
                 </div>
                 
-                <!-- 💡 3連選択ボックスの配置行 -->
                 <div class="search-row">
                     <select id="bigCategory" class="select-control">
                         <option value="">-- 全ての大分類 --</option>
@@ -134,9 +131,7 @@
                     <select id="smallCategorySelect" class="select-control" disabled>
                         <option value="">-- 全ての小分類 --</option>
                     </select>
-                    <!-- 実際にサーバーへ送信されるカテゴリID用の隠しパラメータ -->
                     <input type="hidden" name="categoryId" id="finalCategoryId">
-                    <!-- ⭕ 12. 検索強化：並び順（新着・価格順・人気順） -->
                     <select name="sort" class="select-control" style="flex:0.6;" onchange="this.form.submit()">
                         <option value="">-- 並び順：新着順 --</option>
                         <option value="priceAsc" th:selected="${selectedSort == 'priceAsc'}">価格の安い順</option>
@@ -158,8 +153,8 @@
 
         <div class="grid">
             <a th:each="product : ${products}" th:href="@{/products/{id}(id=${product.id})}" class="card">
-                <img th:if="${product.hasImage}" th:src="@{'/images/products/' + ${product.id} + '_1.jpg'}" class="card-thumb" alt="商品画像">
-                <div th:unless="${product.hasImage}" class="card-thumb-placeholder">🖼️</div>
+                <img th:if="${product.imageUrls != null and !#lists.isEmpty(product.imageUrls)}" th:src="@{${product.imageUrls[0]}}" class="card-thumb" alt="商品画像">
+                <div th:unless="${product.imageUrls != null and !#lists.isEmpty(product.imageUrls)}" class="card-thumb-placeholder">🖼️</div>
                 <div class="card-body">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.25rem;">
                         <span class="badge" th:classappend="${product.status}" th:text="${product.status}">OPEN</span>
@@ -168,14 +163,13 @@
                     <h3 class="card-title" th:text="${product.productName}">商品名</h3>
                     <div class="price-tag" th:text="${product.price}">0</div>
                     <div class="meta-info">
-                        <span>👤 <span th:text="${product.seller.nickname}">出品者</span></span>
+                        <span>👤 <span th:text="${product.seller != null ? product.seller.nickname : '不明'}">出品者</span></span>
                     </div>
                 </div>
             </a>
         </div>
     </div>
 
-    <!-- 💡 大中小連動処理のためのJavaScriptを埋め込み -->
     <script th:inline="javascript">
         const categoryData = /*[[${categories}]]*/ [];
         const selectedCategoryId = /*[[${selectedCategoryId}]]*/ null;
@@ -185,7 +179,6 @@
         const smallSelect = document.getElementById('smallCategorySelect');
         const finalInput = document.getElementById('finalCategoryId');
 
-        // 1. 大分類を生成
         const bigCategories = [...new Set(categoryData.map(c => c.bigCategory))];
         bigCategories.forEach(big => {
             if(big) {
@@ -195,7 +188,6 @@
             }
         });
 
-        // 2. 大分類選択時の連動
         bigSelect.addEventListener('change', function() {
             midSelect.innerHTML = '<option value="">-- 全ての中分類 --</option>';
             smallSelect.innerHTML = '<option value="">-- 全ての小分類 --</option>';
@@ -217,7 +209,6 @@
             midSelect.disabled = false;
         });
 
-        // 3. 中分類選択時の連動
         midSelect.addEventListener('change', function() {
             smallSelect.innerHTML = '<option value="">-- 全ての小分類 --</option>';
             smallSelect.disabled = true;
@@ -228,7 +219,7 @@
             const filtered = categoryData.filter(c => c.bigCategory === bigSelect.value && c.midCategory === this.value);
             
             if (filtered.length > 0) {
-                finalInput.value = filtered[0].id; // 一時的なIDセット
+                finalInput.value = filtered[0].id;
             }
 
             let hasSmall = false;
@@ -245,7 +236,6 @@
             if (hasSmall) smallSelect.disabled = false;
         });
 
-        // 4. 小分類選択時の確定
         smallSelect.addEventListener('change', function() {
             if (this.value) {
                 finalInput.value = this.value;
@@ -255,7 +245,6 @@
             }
         });
 
-        // 5. 検索後にページが再読み込みされたとき、選択されていた大・中・小分類を復元する
         if (selectedCategoryId) {
             const selected = categoryData.find(c => c.id === selectedCategoryId);
             if (selected) {

@@ -41,12 +41,11 @@
         </div>
 
         <div class="card" style="background: linear-gradient(135deg, #eff6ff 0%, #dbedff 100%); border: none;">
-            <h1 style="margin: 0; font-size: 1.5rem;">👤 <span th:text="${currentUser.nickname}">ユーザー名</span> のマイページ</h1>
-            <p style="margin: 0.25rem 0 0 0; color: var(--text-muted); font-size: 0.9rem;">ログインID: <span th:text="${currentUser.email}">email</span></p>
-            <p th:if="${myAvgRating != null}" style="margin: 0.25rem 0 0 0; color: #b45309; font-weight:700; font-size: 0.9rem;">★ 平均評価 <span th:text="${#numbers.formatDecimal(myAvgRating, 1, 1)}">4.5</span>（<span th:text="${#lists.size(myReviews)}">3</span>件）</p>
+            <h1 style="margin: 0; font-size: 1.5rem;">👤 <span th:text="${currentUser != null ? currentUser.nickname : 'ユーザー'}">ユーザー名</span> のマイページ</h1>
+            <p style="margin: 0.25rem 0 0 0; color: var(--text-muted); font-size: 0.9rem;">ログインID: <span th:text="${currentUser != null ? currentUser.email : ''}">email</span></p>
+            <p th:if="${myAvgRating != null}" style="margin: 0.25rem 0 0 0; color: #b45309; font-weight:700; font-size: 0.9rem;">★ 平均評価 <span th:text="${#numbers.formatDecimal(myAvgRating, 1, 1)}">4.5</span>（<span th:text="${myReviews != null ? #lists.size(myReviews) : 0}">3</span>件）</p>
         </div>
 
-        <!-- ⭕ 3. 受け取ったレビュー -->
         <div class="card">
             <h2 class="section-title">⭐ 受け取ったレビュー</h2>
             <ul class="item-list">
